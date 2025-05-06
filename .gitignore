@@ -1,0 +1,57 @@
+# Local .terraform directories
+**/.terraform/*
+**/.terraform.lock.hcl
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform variable files (containing secrets or environment data)
+*.tfvars
+*.tfvars.json
+
+# Sensitive files (backend configs, credentials, etc.)
+terraform.tfvars
+backend.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore auto-generated plan output
+*.plan
+
+# Ignore IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Python virtual environment (if using helper scripts)
+venv/
+__pycache__/
+
+# Node modules (if using for Lambda packaging or frontend builds)
+node_modules/
+
+# Zip files or packaged Lambda artifacts
+*.zip
+
+# Terraform provider plugin cache
+.terraform.d/plugin-cache/
+
+# Lock or dependency files (optional, if not team-managed)
+.terraform.lock.hcl
