@@ -56,6 +56,18 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
   }
 
+  # Optional CloudFront access logging - enabled when both `enable_logging` is true
+  # and a `logging_bucket` name is provided. CloudFront expects the S3 bucket
+  # in the form `bucket-name.s3.amazonaws.com`.
+  dynamic "logging_config" {
+    for_each = (var.enable_logging && var.logging_bucket != "") ? [1] : []
+    content {
+      bucket          = "${var.logging_bucket}.s3.amazonaws.com"
+      include_cookies = var.logging_include_cookies
+      prefix          = var.logging_prefix
+    }
+  }
+
   # Default Behavior (Static content from S3)
   default_cache_behavior {
     target_origin_id       = var.s3_origin_id

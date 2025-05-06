@@ -45,3 +45,27 @@ variable "cloudfront_price_class" {
   
 }
 
+variable "enable_logging" {
+  description = "Whether CloudFront access logging should be enabled"
+  type        = bool
+  default     = false
+}
+
+variable "logging_bucket" {
+  description = "Name of the S3 bucket to receive CloudFront access logs (bucket name, not domain). If provided, CloudFront logging will be configured when enable_logging = true. The module will append `.s3.amazonaws.com` to build the logging target." 
+  type        = string
+  default     = ""
+}
+
+variable "logging_prefix" {
+  description = "Optional prefix for log files in the logging bucket"
+  type        = string
+  default     = "cloudfront/"
+}
+
+variable "logging_include_cookies" {
+  description = "Whether CloudFront should include cookies in the access logs"
+  type        = bool
+  default     = false
+}
+
