@@ -17,6 +17,5 @@ variable "cloudfront_distribution_arn" {
 variable "enable_logging" {
   description = "Whether to create a logs bucket for CloudFront access logs"
   type        = bool
-  default     = false
 }
 

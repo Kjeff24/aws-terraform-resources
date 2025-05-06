@@ -104,8 +104,6 @@ resource "aws_s3_object" "site_files" {
   )
 }
 
-
-
 # Optional logging bucket for CloudFront access logs
 resource "aws_s3_bucket" "cloudfront_logs_bucket" {
   count         = var.enable_logging ? 1 : 0
