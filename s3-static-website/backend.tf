@@ -1,8 +1,8 @@
 terraform {
 
   backend "s3" {
-    bucket       = "account-vending-terraform-state"
-    key          = "day-one-backend/terraform.tfstate"
+    bucket       = "aws-terraform-projects-state-bucket"
+    key          = "s3-static-website/terraform.tfstate"
     region       = "eu-west-1"
     use_lockfile = true
   }
@@ -17,4 +17,8 @@ terraform {
 
 provider "aws" {
   region = var.region
+
+  default_tags {
+    tags = var.tags
+  }
 }
