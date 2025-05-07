@@ -3,12 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "tags" {
-  description = "Tags to apply to resources"
-  type        = map(string)
-}
-
-
 variable "cloudfront_distribution_arn" {
   description = "The ARN of the CloudFront distribution"
   type        = string

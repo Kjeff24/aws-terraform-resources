@@ -33,12 +33,9 @@ resource "aws_s3_bucket" "website_bucket" {
   bucket        = local.static_site_bucket_name
   force_destroy = true
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.project_name}-Static Website Bucket"
-    }
-  )
+  tags = {
+    Name = "${var.project_name}-Static Website Bucket"
+  }
 }
 
 # Block public access to the S3 bucket
@@ -110,12 +107,9 @@ resource "aws_s3_bucket" "cloudfront_logs_bucket" {
   bucket        = "${var.project_name}-cloudfront-logs-${random_id.suffix.hex}"
   force_destroy = false
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.project_name}-CloudFront Logs Bucket"
-    }
-  )
+  tags = {
+    Name = "${var.project_name}-CloudFront Logs Bucket"
+  }
 }
 
 # Block public access to the logs bucket (if created)

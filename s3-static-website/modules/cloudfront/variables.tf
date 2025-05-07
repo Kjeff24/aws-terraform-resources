@@ -8,11 +8,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "tags" {
-  description = "Tags to apply to resources"
-  type        = map(string)
-}
-
 variable "s3_origin_id" {
   description = "The ID of the S3 bucket to use as the origin"
   type        = string
@@ -42,7 +37,7 @@ variable "default_root_object" {
 variable "cloudfront_price_class" {
   description = "The price class for the CloudFront distribution"
   type        = string
-  
+
 }
 
 variable "enable_logging" {
@@ -52,7 +47,7 @@ variable "enable_logging" {
 }
 
 variable "logging_bucket" {
-  description = "Name of the S3 bucket to receive CloudFront access logs (bucket name, not domain). If provided, CloudFront logging will be configured when enable_logging = true. The module will append `.s3.amazonaws.com` to build the logging target." 
+  description = "Name of the S3 bucket to receive CloudFront access logs (bucket name, not domain). If provided, CloudFront logging will be configured when enable_logging = true. The module will append `.s3.amazonaws.com` to build the logging target."
   type        = string
   default     = ""
 }

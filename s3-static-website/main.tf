@@ -31,7 +31,6 @@
 module "s3" {
   source                      = "./modules/s3"
   project_name                = var.project_name
-  tags                        = var.tags
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
   enable_logging = var.enable_logging
 }
@@ -41,7 +40,6 @@ module "cloudfront" {
   source                 = "./modules/cloudfront"
   region                 = var.region
   project_name           = var.project_name
-  tags                   = var.tags
   s3_origin_id           = module.s3.bucket_id
   s3_bucket_domain       = module.s3.bucket_regional_domain_name
   s3_bucket_arn          = module.s3.bucket_arn

@@ -88,11 +88,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cloudfront_default_certificate = true
   }
 
-  tags = merge(
-    var.tags,
-    {
-      Name = "${var.project_name}-${var.s3_origin_id}-oac"
-    }
-  )
+  tags = {
+    Name = "${var.project_name}-${var.s3_origin_id}-oac"
+  }
 }
 
