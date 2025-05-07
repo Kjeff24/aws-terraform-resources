@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="index, follow" />
+	<title>s3-static-website — Documentation</title>
+	<link rel="stylesheet" href="./style.css" />
+	<meta name="description" content="Project documentation rendered from README.md and hosted on S3 + CloudFront." />
+  </head>
+  <body>
+	<header class="site-header">
+	  <div class="container header-inner">
+		<a class="logo" href="#">s3-static-website</a>
+		<nav class="nav" id="primaryNav"></nav>
+		<div class="header-actions">
+		  <button id="themeToggle" class="btn small">Toggle theme</button>
+		</div>
+	  </div>
+	</header>
+
+		<main>
+			<section class="container">
+				<article class="markdown-body">
+					<h1 id="title">s3-static-website</h1>
+					<p>Static website deployment using Terraform, S3 and CloudFront.</p>
+
+					<h2>What this repo contains</h2>
+					<p>
+						This project provisions an S3-backed static website and a CloudFront distribution to serve it via a CDN.
+						The website files are under the <code>files/</code> directory and two modules are provided to separate concerns:
+					</p>
+					<ul>
+						<li><code>modules/s3</code> — creates the S3 bucket, bucket policy, and optional website configuration.</li>
+						<li><code>modules/cloudfront</code> — creates a CloudFront distribution and connects it to the S3 origin.</li>
+					</ul>
+					<p>Terraform root files live at the repository root and wire the modules together.</p>
+
+					<h2>Repo structure</h2>
+					<pre><code>├── README.md
+├── backend.tf
+├── main.tf
+├── outputs.tf
+└── variables.tf
+├── files
+│   ├── index.html
+│   ├── index.js
+│   └── style.css
+├── modules
+│   ├── cloudfront
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   └── s3
+│       ├── main.tf
+│       ├── outputs.tf
+│       └── variables.tf</code></pre>
+
+					<h2>Prerequisites</h2>
+					<ul>
+						<li>Terraform (recommended v1.12+)</li>
+						<li>An AWS account and credentials configured in your environment (AWS CLI, environment variables or credential file)</li>
+					</ul>
+					<p>Configure AWS credentials in one of the usual ways. Example using environment variables on macOS (zsh):</p>
+					<pre><code class="language-zsh">export AWS_ACCESS_KEY_ID="your_key_here"
+export AWS_SECRET_ACCESS_KEY="your_secret_here"
+export AWS_DEFAULT_REGION="eu-west-1"</code></pre>
+
+					<h2>Quick start — deploy the website</h2>
+					<ol>
+						<li>Initialize Terraform</li>
+					</ol>
+					<pre><code class="language-zsh">terraform init</code></pre>
+
+					<ol start="2">
+						<li>(Optional) Review plan</li>
+					</ol>
+					<pre><code class="language-zsh">terraform plan -out plan.tfplan</code></pre>
+
+					<ol start="3">
+						<li>Apply</li>
+					</ol>
+					<pre><code class="language-zsh">terraform apply "plan.tfplan"
+# or
+terraform apply -auto-approve</code></pre>
+					<p>After apply completes, you will have an S3 bucket and a CloudFront distribution created by this configuration.</p>
+					<p><strong>Note about CloudFront in this repo:</strong> the root <code>main.tf</code> includes the <code>modules/cloudfront</code> module unconditionally, so a CloudFront distribution is created by default. The repo currently uses <code>var.enable_logging</code> to control whether a logs bucket is created and passed to CloudFront.</p>
+
+					<h2>Variables</h2>
+					<p>Root-level variables are declared in <code>variables.tf</code>. The most commonly adjusted ones are:</p>
+					<p>The root <code>variables.tf</code> exposes several options used by the S3 and CloudFront modules. Common variables in this repo include:</p>
+					<ul>
+						<li><code>region</code> — AWS region for resources (default in <code>variables.tf</code>)</li>
+						<li><code>project_name</code> — used for resource naming and tagging</li>
+						<li><code>tags</code> — map of tags applied to resources</li>
+						<li><code>enable_logging</code> — whether to create a dedicated CloudFront logs bucket (bool)</li>
+					</ul>
+					<p>CloudFront-specific variables present in <code>variables.tf</code> (used by the <code>modules/cloudfront</code>) include:</p>
+					<ul>
+						<li><code>cloudfront_price_class</code> — CloudFront price class (PriceClass_100/200/All)</li>
+						<li><code>default_root_object</code> — default root object served by CloudFront (e.g., <code>index.html</code>)</li>
+						<li><code>cloudfront_alias</code> — optional CNAME for CloudFront (e.g., <code>cdn.example.com</code>)</li>
+						<li><code>logging_prefix</code> — prefix for logs in the logging bucket</li>
+						<li><code>logging_include_cookies</code> — whether to include cookies in CloudFront access logs</li>
+					</ul>
+					<p>You can pass values by creating a <code>terraform.tfvars</code> file or by setting <code>-var</code> flags. Example <code>terraform.tfvars</code>:</p>
+					<pre><code>region = "eu-west-1"
+project_name = "my-site"
+enable_logging = false</code></pre>
+
+					<h2>Outputs</h2>
+					<p>After apply, you can inspect outputs and module outputs to find the created resource identifiers:</p>
+					<ul>
+						<li><code>s3_bucket_name</code> — created bucket name (if exposed at root)</li>
+						<li><code>s3_website_endpoint</code> — S3 website endpoint (if website hosting enabled and exposed at root)</li>
+					</ul>
+					<p>The CloudFront module (see <code>modules/cloudfront/outputs.tf</code>) exposes the following outputs:</p>
+					<ul>
+						<li><code>domain_name</code> — the CloudFront distribution domain (e.g., d1234abcd.cloudfront.net)</li>
+						<li><code>distribution_arn</code> — the distribution ARN</li>
+					</ul>
+					<p>
+						To expose the CloudFront domain at the root so you can run <code>terraform output cloudfront_domain_name</code>, add a root output like this to <code>outputs.tf</code>:
+					</p>
+					<pre><code class="language-terraform">output "cloudfront_domain_name" {
+	description = "CloudFront distribution domain name"
+	value       = module.cloudfront.domain_name
+}</code></pre>
+					<p>After adding that root output and re-applying (or refreshing state), you can run:</p>
+					<pre><code class="language-zsh">terraform output cloudfront_domain_name
+# =&gt; d1234abcd.cloudfront.net</code></pre>
+
+					<h2>Local testing</h2>
+					<p>You can preview the static files locally before deploying. From the <code>files/</code> folder run a simple HTTP server (Python 3):</p>
+					<pre><code class="language-zsh">cd files
+python3 -m http.server 8000
+# open http://localhost:8000</code></pre>
+
+					<h2>Cleaning up / destroy</h2>
+					<p>To remove all resources created by Terraform run:</p>
+					<pre><code class="language-zsh">terraform destroy -auto-approve</code></pre>
+					<p>
+						Important: S3 buckets containing objects may fail to be destroyed until the bucket is emptied. If a
+						<code>terraform destroy</code> fails because the bucket isn't empty, you can either empty it manually or use a
+						lifecycle/automation to remove objects first. Be careful — you will permanently delete your site assets.
+					</p>
+					<h2>License</h2>
+					<p>MIT</p>
+				</article>
+			</section>
+		</main>
+
+	<footer class="site-footer">
+	  <div class="container footer-inner">
+		<small>© <span id="year"></span> s3-static-website — README viewer</small>
+		<nav class="footer-nav">
+		  <a href="https://github.com/Kjeff24/aws-terraform-resources" target="_blank" rel="noopener">Source</a>
+		</nav>
+	  </div>
+	</footer>
+
+	<script src="./index.js" defer></script>
+  </body>
+  </html>
