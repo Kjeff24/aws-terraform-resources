@@ -28,6 +28,9 @@ locals {
   static_site_bucket_name = "${var.project_name}-static-site-bucket-${random_id.suffix.hex}"
 }
 
+# Canonical user ID of the current AWS account (bucket owner) — used for ACL owner/grant definitions
+data "aws_canonical_user_id" "current" {}
+
 # Create a private S3 bucket for static assets
 resource "aws_s3_bucket" "website_bucket" {
   bucket        = local.static_site_bucket_name
@@ -105,10 +108,54 @@ resource "aws_s3_object" "site_files" {
 resource "aws_s3_bucket" "cloudfront_logs_bucket" {
   count         = var.enable_logging ? 1 : 0
   bucket        = "${var.project_name}-cloudfront-logs-${random_id.suffix.hex}"
-  force_destroy = false
+  force_destroy = true
 
   tags = {
     Name = "${var.project_name}-CloudFront Logs Bucket"
+  }
+}
+
+# Enable ACLs on the logs bucket so CloudFront can deliver standard access logs
+resource "aws_s3_bucket_ownership_controls" "cloudfront_logs_bucket_ownership" {
+  count  = var.enable_logging ? 1 : 0
+  bucket = aws_s3_bucket.cloudfront_logs_bucket[0].id
+
+  rule {
+    # Allow ACLs while keeping bucket owner as preferred owner of new objects
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+# Apply the required ACL for CloudFront log delivery
+resource "aws_s3_bucket_acl" "cloudfront_logs_bucket_acl" {
+  count      = var.enable_logging ? 1 : 0
+  bucket     = aws_s3_bucket.cloudfront_logs_bucket[0].id
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs_bucket_ownership]
+
+  # Explicit ACL grants for CloudFront standard logging per AWS requirements
+  access_control_policy {
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+
+    # Ensure bucket owner retains full control
+    grant {
+      permission = "FULL_CONTROL"
+      grantee {
+        type = "CanonicalUser"
+        id   = data.aws_canonical_user_id.current.id
+      }
+    }
+
+    # Grant FULL_CONTROL to the AWS logs delivery canonical user for CloudFront
+    # Canonical ID per AWS documentation: awslogsdelivery
+    grant {
+      permission = "FULL_CONTROL"
+      grantee {
+        type = "CanonicalUser"
+        id   = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"
+      }
+    }
   }
 }
 
