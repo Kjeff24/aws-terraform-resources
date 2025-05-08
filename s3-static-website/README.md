@@ -158,7 +158,7 @@ Important: S3 buckets containing objects may fail to be destroyed until the buck
 
 - Ensure your S3 bucket name is globally unique if you provide custom names.
 - For production use, consider using a certificate (ACM) and a custom domain; CloudFront + ACM in eu-west-1 is common for global distributions.
-- The `backend.tf` can be configured to use an S3 backend and DynamoDB for state locking — recommended for team usage.
+- The `backend.tf` can be configured to use an S3 backend with state locking
 - Validate IAM permissions: the credentials you use must be able to create S3 buckets, put bucket policies, create CloudFront distributions, and manage related resources.
 
 ## License
