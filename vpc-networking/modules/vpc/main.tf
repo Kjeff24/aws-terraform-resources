@@ -43,8 +43,8 @@ locals {
 # Create VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.networking.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  enable_dns_hostnames = var.networking.enable_dns_hostnames
+  enable_dns_support   = var.networking.enable_dns_support
 
   tags = {
     ResourceName = "main-vpc"

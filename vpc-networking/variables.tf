@@ -46,12 +46,16 @@ variable "networking" {
     public_subnet_count  : number
     private_subnet_count : number
     subnet_prefix_length : number
+    enable_dns_hostnames : bool
+    enable_dns_support   : bool
   })
   default = {
     vpc_cidr             = "10.0.0.0/16"
     public_subnet_count  = 2
     private_subnet_count = 2
     subnet_prefix_length = 24
+    enable_dns_hostnames = true
+    enable_dns_support   = true
   }
 
   validation {
@@ -80,5 +84,10 @@ variable "networking" {
       var.networking.subnet_prefix_length - tonumber(element(split("/", var.networking.vpc_cidr), 1))
     )
     error_message = "Requested subnets (public + private) exceed capacity for the given VPC CIDR and subnet_prefix_length."
+  }
+
+  validation {
+    condition     = var.networking.enable_dns_support || (!var.networking.enable_dns_hostnames)
+    error_message = "enable_dns_hostnames requires enable_dns_support to be true."
   }
 }
