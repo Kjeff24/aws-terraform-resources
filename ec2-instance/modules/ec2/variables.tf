@@ -12,8 +12,3 @@ variable "instance_config" {
 		disable_api_termination  : bool
 	})
 }
-
-variable "tags" {
-	type = map(string)
-}
-

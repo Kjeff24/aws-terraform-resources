@@ -1,3 +1,7 @@
+
+############################
+# Security Group Outputs
+############################
 # Security group outputs
 output "ec2_sg_id" {
 	value       = module.security_groups.ec2_sg_id
