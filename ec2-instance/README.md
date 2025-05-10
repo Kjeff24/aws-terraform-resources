@@ -1,415 +1,206 @@
-# EC2 Instance Terraform Module
+# EC2 Instance Terraform Stack
 
-This Terraform configuration provisions an EC2 instance with optional VPC creation, security groups, and key pair management.
+Provision a secure EC2 instance with a generated SSH key pair, opinionated security groups, and sane defaults. This stack composes three local modules:
 
-## Features
+- keypair: Generates or accepts an SSH key pair and exports its details
+- security_groups: Creates a project-scoped EC2 security group
+- ec2: Launches the EC2 instance, wiring in key pair, security groups, and optional user data
 
-✅ **Flexible VPC Management**: Create a new VPC or use an existing one  
-✅ **Modular Design**: Separate modules for VPC, EC2, Security Groups, and Key Pairs  
-✅ **Key Pair Options**: Generate new keys, import existing keys, or use existing AWS key pairs  
-✅ **Security Group Management**: Configurable SSH and HTTP access rules  
-✅ **Encrypted Storage**: Root volumes are encrypted by default  
+The configuration now includes robust input validation for instance_config to catch misconfiguration early.
 
----
+## Prerequisites
 
-## Usage Modes
+- Terraform >= 1.4 (1.5+ recommended)
+- AWS credentials configured (AWS_PROFILE or environment variables)
+- If using the remote backend in backend.tf: an existing S3 bucket and permissions to read/write state
 
-### Mode 1: Create New VPC (Default)
+## Getting started
 
-The module will create a complete VPC with public/private subnets, Internet Gateway, NAT Gateway, and route tables.
+By default, backend.tf points to an S3 bucket for state. For a quick local test without touching remote state:
 
-```hcl
-module "ec2_with_new_vpc" {
-  source = "./ec2-instance"
-
-  region       = "us-east-1"
-  project_name = "my-project"
-
-  # VPC will be created automatically
-  create_vpc = true
-  
-  networking = {
-    vpc_cidr             = "10.0.0.0/16"
-    public_subnet_count  = 2
-    private_subnet_count = 2
-    subnet_prefix_length = 24
-    enable_dns_hostnames = true
-    enable_dns_support   = true
-  }
-
-  # EC2 instance configuration
-  instance_config = {
-    ami_id                  = "ami-0c55b159cbfafe1f0"  # Replace with your AMI
-    instance_type           = "t3.micro"
-    subnet_id               = ""  # Will use first public subnet automatically
-    security_group_ids      = []  # Will use created security group
-    key_name                = ""  # Will use keypair module
-    associate_public_ip     = true
-    iam_instance_profile    = ""
-    root_volume_size_gb     = 20
-    root_volume_type        = "gp3"
-    disable_api_termination = false
-  }
-
-  # Key pair configuration
-  key_pair_config = {
-    enabled              = true
-    key_pair_name        = "my-ec2-key"
-    generate_key_pair    = true
-    public_key           = ""
-    public_key_path      = ""
-    key_algorithm        = "ED25519"
-    rsa_bits             = 4096
-    ecdsa_curve          = "P256"
-    save_private_key_path = "./keys/private-key.pem"
-    save_public_key_path  = "./keys/public-key.pub"
-  }
-
-  # Security settings
-  ssh_allowed_cidrs  = ["0.0.0.0/0"]  # ⚠️ Restrict in production
-  http_allowed_cidrs = ["0.0.0.0/0"]
-
-  tags = {
-    Environment = "Development"
-    ManagedBy   = "Terraform"
-    Project     = "EC2-Instance"
-  }
-}
+```bash
+cd ec2-instance
+terraform init -backend=false
+terraform validate
+terraform plan
 ```
 
----
+To use the configured S3 backend (recommended for team use):
 
-### Mode 2: Use Existing VPC
-
-Use your existing VPC infrastructure by providing VPC ID, subnet IDs, and VPC CIDR.
-
-```hcl
-module "ec2_with_existing_vpc" {
-  source = "./ec2-instance"
-
-  region       = "us-east-1"
-  project_name = "my-project"
-
-  # Use existing VPC
-  create_vpc = false
-  
-  existing_vpc_id             = "vpc-0123456789abcdef0"
-  existing_vpc_cidr           = "10.0.0.0/16"
-  existing_public_subnet_ids  = ["subnet-0abc123", "subnet-0def456"]
-  existing_private_subnet_ids = ["subnet-0ghi789", "subnet-0jkl012"]
-
-  # EC2 instance configuration
-  instance_config = {
-    ami_id                  = "ami-0c55b159cbfafe1f0"
-    instance_type           = "t3.micro"
-    subnet_id               = "subnet-0abc123"  # Specify exact subnet or leave empty
-    security_group_ids      = []  # Will create a new security group in your VPC
-    key_name                = ""
-    associate_public_ip     = true
-    iam_instance_profile    = ""
-    root_volume_size_gb     = 20
-    root_volume_type        = "gp3"
-    disable_api_termination = false
-  }
-
-  # Key pair configuration
-  key_pair_config = {
-    enabled              = true
-    key_pair_name        = "my-ec2-key"
-    generate_key_pair    = false
-    public_key           = ""
-    public_key_path      = "~/.ssh/id_ed25519.pub"  # Use your existing public key
-    key_algorithm        = "ED25519"
-    rsa_bits             = 4096
-    ecdsa_curve          = "P256"
-    save_private_key_path = ""
-    save_public_key_path  = ""
-  }
-
-  # Security settings
-  ssh_allowed_cidrs  = ["10.0.0.0/16"]  # Restrict to VPC CIDR
-  http_allowed_cidrs = ["0.0.0.0/0"]
-
-  tags = {
-    Environment = "Development"
-    ManagedBy   = "Terraform"
-    Project     = "EC2-Instance"
-  }
-}
+```bash
+cd ec2-instance
+terraform init
+terraform validate
+terraform plan
 ```
 
----
+Apply and destroy:
+
+```bash
+mkdir -p keys # required for key files written by the keypair module
+terraform apply
+terraform destroy
+```
 
 ## Variables
 
-### VPC Configuration
+- region (string, default: eu-west-1)
+	- AWS region to deploy to. Note: the default AMI in instance_config is for us-east-1 and must be overridden or change region accordingly.
+- project_name (string, default: my-site)
+	- Used for naming/tagging resources
+- tags (map(string))
+	- Default tags applied via provider default_tags
+- instance_config (object) — main EC2 settings:
+	- ami_id (string): AMI to use
+	- instance_type (string): e.g., t3.micro
+	- subnet_id (string): empty to use defaults or supply a subnet id
+	- security_group_ids (list(string)): additional SGs, can be empty; the stack also creates a default SG
+	- key_name (string): optional; if empty, the generated key pair’s name is used automatically
+	- associate_public_ip (bool): whether to assign a public IP
+	- iam_instance_profile (string): empty, a profile name, or a valid instance profile ARN
+	- root_volume_size_gb (number): 1–1024
+	- root_volume_type (string): one of gp2, gp3, io1, io2, st1, sc1, standard
+	- disable_api_termination (bool): enables termination protection when true
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `create_vpc` | `bool` | `true` | Whether to create a new VPC. Set to `false` to use an existing VPC. |
-| `networking` | `object` | See defaults | VPC configuration (only used when `create_vpc = true`) |
-| `existing_vpc_id` | `string` | `""` | ID of existing VPC (required when `create_vpc = false`) |
-| `existing_vpc_cidr` | `string` | `""` | CIDR block of existing VPC (required when `create_vpc = false`) |
-| `existing_public_subnet_ids` | `list(string)` | `[]` | List of existing public subnet IDs (required when `create_vpc = false`) |
-| `existing_private_subnet_ids` | `list(string)` | `[]` | List of existing private subnet IDs (optional) |
+### Validation rules for instance_config
 
-### EC2 Configuration
+These validations are enforced to surface configuration errors early:
 
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `instance_config` | `object` | N/A (required) | EC2 instance configuration including AMI, instance type, subnet, etc. |
-| `key_pair_config` | `object` | See defaults | Key pair configuration for SSH access |
+- ami_id must match: ami-xxxxxxxx (hex)
+- instance_type format: family.size (e.g., t3.micro)
+- subnet_id: empty or subnet-xxxxxxxx (hex)
+- security_group_ids: each id must be sg-xxxxxxxx (hex); empty list allowed
+- key_name: empty or 1–255 chars of A–Z, a–z, 0–9, dot, underscore, hyphen
+- iam_instance_profile: empty OR a simple name (A–Z, a–z, 0–9, +=,.@_-) OR a full ARN like arn:aws:iam::123456789012:instance-profile/Name
+- root_volume_size_gb: 1 to 1024 inclusive
+- root_volume_type: gp2, gp3, io1, io2, st1, sc1, standard
 
-### Security Configuration
-
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| `ssh_allowed_cidrs` | `list(string)` | `["10.0.0.0/16"]` | CIDR blocks allowed SSH access (port 22) |
-| `http_allowed_cidrs` | `list(string)` | `["0.0.0.0/0"]` | CIDR blocks allowed HTTP access (port 80) |
-
----
+Tip: The default AMI value is an Amazon Linux 2 AMI for us-east-1. If you keep region = eu-west-1, set a valid AMI for eu-west-1.
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `vpc_id` | ID of the VPC (created or existing) |
-| `vpc_cidr` | CIDR block of the VPC |
-| `public_subnet_ids` | IDs of public subnets |
-| `private_subnet_ids` | IDs of private subnets |
-| `vpc_created` | Whether a new VPC was created (`true`) or existing used (`false`) |
-| `ec2_sg_id` | ID of the EC2 security group |
-| `instance_id` | ID of the EC2 instance |
-| `public_ip` | Public IP address of the EC2 instance |
-| `private_ip` | Private IP address of the EC2 instance |
-| `key_pair_name` | Name of the SSH key pair |
-| `generated_private_key_pem` | Generated private key (sensitive, only if generated) |
+- ec2_sg_id: ID of the default EC2 security group created by the security_groups module
+- instance_id: ID of the EC2 instance
+- public_ip: Public IP of the instance (if assigned)
+- private_ip: Private IP of the instance
+- public_dns: Public DNS name (if assigned)
+- availability_zone: AZ where the instance is launched
 
----
+Note: Some outputs depend on how the keypair module is configured. If you’re using the bundled keypair module, ensure the `keys/` directory exists so file outputs can be written.
 
-## Key Pair Management
+## User data
 
-### Option 1: Generate New Key Pair
+The EC2 module references a user data template from the root module path:
 
 ```hcl
-key_pair_config = {
-  enabled              = true
-  key_pair_name        = "my-new-key"
-  generate_key_pair    = true
-  public_key           = ""
-  public_key_path      = ""
-  key_algorithm        = "ED25519"  # or "RSA" or "ECDSA"
-  rsa_bits             = 4096
-  ecdsa_curve          = "P256"
-  save_private_key_path = "./keys/private-key.pem"
-  save_public_key_path  = "./keys/public-key.pub"
-}
+user_data = templatefile("${path.root}/user_data.sh", {})
 ```
 
-### Option 2: Import Existing Public Key
+- If you maintain your script at `scripts/user_data.sh`, either move it to the root as `user_data.sh` or update the module code to:
 
 ```hcl
-key_pair_config = {
-  enabled              = true
-  key_pair_name        = "my-imported-key"
-  generate_key_pair    = false
-  public_key           = ""
-  public_key_path      = "~/.ssh/id_ed25519.pub"
-  key_algorithm        = "ED25519"
-  rsa_bits             = 4096
-  ecdsa_curve          = "P256"
-  save_private_key_path = ""
-  save_public_key_path  = ""
-}
+user_data = templatefile("${path.root}/scripts/user_data.sh", {})
 ```
 
-### Option 3: Use Existing AWS Key Pair
+Ensure the script is executable and idempotent. Keep secrets out of VCS; prefer pulling from AWS SSM Parameter Store or Secrets Manager inside the script.
+
+## Customization examples
+
+Override the AMI for your region and pin a larger root volume:
 
 ```hcl
-key_pair_config = {
-  enabled           = false
-  key_pair_name     = "existing-aws-key-name"
-  generate_key_pair = false
-  # ... other fields can be default
-}
-
-instance_config = {
-  # ...
-  key_name = "existing-aws-key-name"
-  # ...
+variable "instance_config" {
+	default = {
+		ami_id                   = "ami-0abcdef1234567890" # eu-west-1 AMI
+		instance_type            = "t3.micro"
+		subnet_id                = ""            
+		security_group_ids       = []
+		key_name                 = ""            
+		associate_public_ip      = true
+		iam_instance_profile     = ""            
+		root_volume_size_gb      = 16
+		root_volume_type         = "gp3"
+		disable_api_termination  = false
+	}
 }
 ```
 
----
-
-## Examples
-
-### Minimal Configuration (Create VPC)
+Attach an existing instance profile by name or ARN:
 
 ```hcl
-module "ec2_minimal" {
-  source = "./ec2-instance"
-
-  project_name = "test-ec2"
-
-  instance_config = {
-    ami_id                  = "ami-0c55b159cbfafe1f0"
-    instance_type           = "t3.micro"
-    subnet_id               = ""
-    security_group_ids      = []
-    key_name                = ""
-    associate_public_ip     = true
-    iam_instance_profile    = ""
-    root_volume_size_gb     = 20
-    root_volume_type        = "gp3"
-    disable_api_termination = false
-  }
-}
+instance_config = merge(var.instance_config, {
+	iam_instance_profile = "MyEc2InstanceProfile" # or "arn:aws:iam::123456789012:instance-profile/MyEc2InstanceProfile"
+})
 ```
 
-### Production Configuration (Existing VPC)
+Provide additional security groups:
 
 ```hcl
-module "ec2_production" {
-  source = "./ec2-instance"
+instance_config = merge(var.instance_config, {
+	security_group_ids = ["sg-0123abcd4567efgh1"]
+})
+```
 
-  region       = "us-east-1"
-  project_name = "prod-app"
+## Backend configuration
 
-  # Use existing VPC
-  create_vpc                  = false
-  existing_vpc_id             = "vpc-prod123"
-  existing_vpc_cidr           = "172.31.0.0/16"
-  existing_public_subnet_ids  = ["subnet-pub1", "subnet-pub2"]
-  existing_private_subnet_ids = ["subnet-priv1", "subnet-priv2"]
+backend.tf is configured to use an S3 bucket:
 
-  instance_config = {
-    ami_id                  = "ami-prod-hardened-123"
-    instance_type           = "t3.large"
-    subnet_id               = "subnet-pub1"
-    security_group_ids      = []
-    key_name                = ""
-    associate_public_ip     = true
-    iam_instance_profile    = "EC2-SSM-Role"
-    root_volume_size_gb     = 100
-    root_volume_type        = "gp3"
-    disable_api_termination = true
-  }
-
-  key_pair_config = {
-    enabled              = true
-    key_pair_name        = "prod-ec2-key"
-    generate_key_pair    = false
-    public_key_path      = "./keys/prod-key.pub"
-    key_algorithm        = "ED25519"
-    save_private_key_path = ""
-    save_public_key_path  = ""
-  }
-
-  ssh_allowed_cidrs  = ["10.50.0.0/24"]  # Bastion host subnet only
-  http_allowed_cidrs = ["0.0.0.0/0"]
-
-  tags = {
-    Environment = "Production"
-    ManagedBy   = "Terraform"
-    Project     = "WebApp"
-    CostCenter  = "Engineering"
-  }
+```hcl
+backend "s3" {
+	bucket       = "aws-terraform-projects-state-bucket"
+	key          = "ec2-instance/terraform.tfstate"
+	region       = "eu-west-1"
+	use_lockfile = true
 }
 ```
 
----
+For local experiments, disable the backend:
 
-## Requirements
-
-- Terraform >= 1.0
-- AWS Provider >= 4.0
-- Valid AWS credentials configured
-
----
-
-## Deployment Steps
-
-1. **Initialize Terraform**:
-   ```bash
-   cd ec2-instance
-   terraform init
-   ```
-
-2. **Review the plan**:
-   ```bash
-   terraform plan
-   ```
-
-3. **Apply the configuration**:
-   ```bash
-   terraform apply
-   ```
-
-4. **SSH into your instance** (if key was generated):
-   ```bash
-   chmod 400 ./keys/private-key.pem
-   ssh -i ./keys/private-key.pem ec2-user@<public_ip>
-   ```
-
----
-
-## Security Considerations
-
-⚠️ **Important Security Notes**:
-
-- **SSH Access**: By default, `ssh_allowed_cidrs` is set to the VPC CIDR. For production, restrict to specific IP ranges.
-- **Key Management**: Store private keys securely. Never commit them to version control.
-- **IAM Roles**: Use IAM instance profiles instead of embedding credentials.
-- **Security Groups**: Follow the principle of least privilege.
-- **Encryption**: Root volumes are encrypted by default.
-
----
-
-## Module Structure
-
-```
-ec2-instance/
-├── main.tf              # Main configuration with VPC selection logic
-├── variables.tf         # Input variables
-├── outputs.tf           # Output values
-├── backend.tf           # Backend configuration
-├── README.md            # This file
-└── modules/
-    ├── vpc/             # VPC module (creates VPC resources)
-    ├── ec2/             # EC2 instance module
-    ├── security_groups/ # Security group module
-    └── keypair/         # Key pair management module
+```bash
+terraform init -backend=false
 ```
 
----
+## Security notes
+
+- The keypair module can generate and output a private key (sensitive); handle with care.
+- Consider storing generated keys securely (e.g., AWS Secrets Manager) and restricting filesystem permissions.
+- Set disable_api_termination = true to protect important instances.
 
 ## Troubleshooting
 
-### VPC Not Found Error
+- Invalid AMI ID
+	- Ensure the AMI exists in the selected region. The default AMI is for us-east-1; change it for eu-west-1.
+- IAM instance profile not found
+	- If you pass a name, ensure the profile exists; with an ARN, verify the account id and name.
+- Security group/id format errors
+	- The validations enforce sg- and subnet- id formats; double-check the values.
 
-If you see errors about VPC not found when `create_vpc = false`:
-- Verify the `existing_vpc_id` is correct
-- Ensure the VPC exists in the specified region
-- Check AWS credentials have permission to describe VPCs
+## Project structure
 
-### Subnet Validation Errors
-
-If subnet validation fails:
-- Ensure all `existing_public_subnet_ids` exist in the specified VPC
-- Verify subnet IDs are in the correct format (`subnet-xxxxx`)
-- Check that at least one public subnet is provided
-
-### Key Pair Issues
-
-If SSH connection fails:
-- Verify the key pair was created successfully
-- Check file permissions on private key: `chmod 400 <key-file>`
-- Ensure security group allows SSH from your IP
-- Verify the correct username for your AMI (e.g., `ec2-user`, `ubuntu`, `admin`)
-
+```
+.
+├── README.md
+├── backend.tf
+├── main.tf
+├── modules
+│   ├── ec2
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   ├── keypair
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   └── variables.tf
+│   └── security_groups
+│       ├── main.tf
+│       ├── outputs.tf
+│       └── variables.tf
+├── outputs.tf
+├── scripts
+│   └── user_data.sh
+└── variable.tf
+```
 ---
 
-## License
+Maintainer tip: run terraform validate as you iterate to catch input mistakes early.
 
-MIT License - Feel free to use and modify as needed.
