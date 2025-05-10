@@ -41,7 +41,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = var.instance_config.iam_instance_profile != "" ? var.instance_config.iam_instance_profile : null
   disable_api_termination     = var.instance_config.disable_api_termination
 
-  user_data = templatefile("${path.module}/user_data.sh", {})
+  user_data = templatefile("${path.root}/user_data.sh", {})
 
   root_block_device {
     volume_size = var.instance_config.root_volume_size_gb
