@@ -56,3 +56,7 @@ node_modules/
 
 # Lock or dependency files (optional, if not team-managed)
 .terraform.lock.hcl
+
+
+*.pem
+*.pub
