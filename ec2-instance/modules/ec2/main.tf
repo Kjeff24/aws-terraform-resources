@@ -34,12 +34,6 @@ resource "aws_instance" "this" {
 
   user_data = templatefile("${path.root}/scripts/user_data.sh", {})
 
-  root_block_device {
-    volume_size = var.instance_config.root_volume_size_gb
-    volume_type = var.instance_config.root_volume_type
-    encrypted   = true
-  }
-
   tags = { ResourceName = "ec2-instance" }
 
 }

@@ -48,20 +48,16 @@ variable "instance_config" {
     key_name               : string
     associate_public_ip    : bool
     iam_instance_profile   : string
-    root_volume_size_gb    : number
-    root_volume_type       : string
     disable_api_termination: bool
   })
 
   default = {
-    ami_id                 = "" # Leave empty to auto-select latest Ubuntu 22.04 for the region
+    ami_id                 = "ami-0f9fa7cd5a3697470" # Leave empty to auto-select latest Ubuntu 22.04 for the region
     instance_type          = "t2.micro"
     subnet_id              = ""                     # can leave empty if using default VPC
     key_name               = ""        # can leave empty to use generated key
     associate_public_ip    = true
     iam_instance_profile   = ""                    # No IAM role by default
-    root_volume_size_gb    = 1
-    root_volume_type       = "gp2"
     disable_api_termination = false
   }
 
@@ -90,16 +86,6 @@ variable "instance_config" {
     # Accept either a simple name or a full instance profile ARN
     condition     = var.instance_config.iam_instance_profile == "" || can(regex("^[A-Za-z0-9+=,.@_-]{1,128}$", var.instance_config.iam_instance_profile)) || can(regex("^arn:aws:iam::[0-9]{12}:instance-profile/[A-Za-z0-9+=,.@_-]{1,128}$", var.instance_config.iam_instance_profile))
     error_message = "instance_config.iam_instance_profile must be empty, an instance profile name, or a valid instance profile ARN."
-  }
-
-  validation {
-    condition     = var.instance_config.root_volume_size_gb >= 1 && var.instance_config.root_volume_size_gb <= 1024
-    error_message = "instance_config.root_volume_size_gb must be between 1 and 1024."
-  }
-
-  validation {
-    condition     = contains(["gp2", "gp3", "io1", "io2", "st1", "sc1", "standard"], var.instance_config.root_volume_type)
-    error_message = "instance_config.root_volume_type must be one of: gp2, gp3, io1, io2, st1, sc1, standard."
   }
 }
 

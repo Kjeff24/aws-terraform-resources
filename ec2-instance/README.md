@@ -10,7 +10,7 @@ The configuration now includes robust input validation for instance_config to ca
 
 ## Prerequisites
 
-- Terraform >= 1.4 (1.5+ recommended)
+- Terraform >= 1.12
 - AWS credentials configured (AWS_PROFILE or environment variables)
 - If using the remote backend in backend.tf: an existing S3 bucket and permissions to read/write state
 
@@ -54,12 +54,9 @@ terraform destroy
 	- ami_id (string): AMI to use
 	- instance_type (string): e.g., t3.micro
 	- subnet_id (string): empty to use defaults or supply a subnet id
-	- security_group_ids (list(string)): additional SGs, can be empty; the stack also creates a default SG
 	- key_name (string): optional; if empty, the generated key pair’s name is used automatically
 	- associate_public_ip (bool): whether to assign a public IP
 	- iam_instance_profile (string): empty, a profile name, or a valid instance profile ARN
-	- root_volume_size_gb (number): 1–1024
-	- root_volume_type (string): one of gp2, gp3, io1, io2, st1, sc1, standard
 	- disable_api_termination (bool): enables termination protection when true
 
 ### Validation rules for instance_config
@@ -69,11 +66,8 @@ These validations are enforced to surface configuration errors early:
 - ami_id must match: ami-xxxxxxxx (hex)
 - instance_type format: family.size (e.g., t3.micro)
 - subnet_id: empty or subnet-xxxxxxxx (hex)
-- security_group_ids: each id must be sg-xxxxxxxx (hex); empty list allowed
 - key_name: empty or 1–255 chars of A–Z, a–z, 0–9, dot, underscore, hyphen
 - iam_instance_profile: empty OR a simple name (A–Z, a–z, 0–9, +=,.@_-) OR a full ARN like arn:aws:iam::123456789012:instance-profile/Name
-- root_volume_size_gb: 1 to 1024 inclusive
-- root_volume_type: gp2, gp3, io1, io2, st1, sc1, standard
 
 Tip: The default AMI value is an Amazon Linux 2 AMI for us-east-1. If you keep region = eu-west-1, set a valid AMI for eu-west-1.
 
@@ -113,13 +107,10 @@ variable "instance_config" {
 	default = {
 		ami_id                   = "ami-0abcdef1234567890" # eu-west-1 AMI
 		instance_type            = "t3.micro"
-		subnet_id                = ""            
-		security_group_ids       = []
+		subnet_id                = ""      
 		key_name                 = ""            
 		associate_public_ip      = true
-		iam_instance_profile     = ""            
-		root_volume_size_gb      = 16
-		root_volume_type         = "gp3"
+		iam_instance_profile     = ""        
 		disable_api_termination  = false
 	}
 }
@@ -130,14 +121,6 @@ Attach an existing instance profile by name or ARN:
 ```hcl
 instance_config = merge(var.instance_config, {
 	iam_instance_profile = "MyEc2InstanceProfile" # or "arn:aws:iam::123456789012:instance-profile/MyEc2InstanceProfile"
-})
-```
-
-Provide additional security groups:
-
-```hcl
-instance_config = merge(var.instance_config, {
-	security_group_ids = ["sg-0123abcd4567efgh1"]
 })
 ```
 
@@ -170,6 +153,8 @@ terraform init -backend=false
 
 - Invalid AMI ID
 	- Ensure the AMI exists in the selected region. The default AMI is for us-east-1; change it for eu-west-1.
+- InvalidBlockDeviceMapping: Volume size is smaller than snapshot
+	- Increase `instance_config.root_volume_size_gb` to at least the AMI’s snapshot size (often 8GB for Ubuntu/Amazon Linux). Default is now 8GB.
 - IAM instance profile not found
 	- If you pass a name, ensure the profile exists; with an ARN, verify the account id and name.
 - Security group/id format errors

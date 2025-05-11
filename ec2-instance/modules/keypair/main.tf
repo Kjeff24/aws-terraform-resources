@@ -11,7 +11,7 @@ resource "local_file" "private_key" {
 }
 
 resource "local_file" "public_key" {
-  filename        = "${path.root}/keys/terraform-key.pub"
+  filename        = "${path.root}/keys/terraform_public_key.pub"
   content         = tls_private_key.key.public_key_openssh
   file_permission = "0644"
 }

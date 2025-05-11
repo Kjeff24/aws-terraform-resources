@@ -6,8 +6,6 @@ variable "instance_config" {
 		key_name                 : string
 		associate_public_ip      : bool
 		iam_instance_profile     : string
-		root_volume_size_gb      : number
-		root_volume_type         : string
 		disable_api_termination  : bool
 	})
 }
