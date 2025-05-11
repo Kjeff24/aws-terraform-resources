@@ -45,7 +45,6 @@ variable "instance_config" {
     ami_id                 : string
     instance_type          : string
     subnet_id              : string
-    security_group_ids     : list(string)
     key_name               : string
     associate_public_ip    : bool
     iam_instance_profile   : string
@@ -55,7 +54,7 @@ variable "instance_config" {
   })
 
   default = {
-    ami_id                 = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 (us-east-1)
+    ami_id                 = "" # Leave empty to auto-select latest Ubuntu 22.04 for the region
     instance_type          = "t2.micro"
     subnet_id              = ""                     # can leave empty if using default VPC
     key_name               = ""        # can leave empty to use generated key
@@ -68,8 +67,8 @@ variable "instance_config" {
 
   # ✅ Field-level validations for instance_config
   validation {
-    condition     = can(regex("^ami-[0-9a-f]+$", var.instance_config.ami_id))
-    error_message = "instance_config.ami_id must be a valid AMI id (e.g., ami-123abc456def78901)."
+    condition     = var.instance_config.ami_id == "" || can(regex("^ami-[0-9a-f]+$", var.instance_config.ami_id))
+    error_message = "instance_config.ami_id must be empty or a valid AMI id (e.g., ami-123abc456def78901)."
   }
 
   validation {
@@ -80,11 +79,6 @@ variable "instance_config" {
   validation {
     condition     = var.instance_config.subnet_id == "" || can(regex("^subnet-[0-9a-f]+$", var.instance_config.subnet_id))
     error_message = "instance_config.subnet_id must be empty or a valid subnet id (e.g., subnet-abc123...)."
-  }
-
-  validation {
-    condition     = length(var.instance_config.security_group_ids) == 0 || alltrue([for sg in var.instance_config.security_group_ids : can(regex("^sg-[0-9a-f]+$", sg))])
-    error_message = "Every security group id in instance_config.security_group_ids must be a valid sg-xxxxxxxx id."
   }
 
   validation {

@@ -3,7 +3,8 @@
 # Key Pair Module
 ############################
 module "keypair" {
-  source = "./modules/keypair"
+  source       = "./modules/keypair"
+  project_name = var.project_name
 }
 
 ############################
@@ -25,4 +26,5 @@ module "ec2" {
       key_name = length(trimspace(var.instance_config.key_name)) > 0 ? var.instance_config.key_name : module.keypair.key_pair_name
     }
   )
+  security_group_id = module.security_groups.ec2_sg_id
 }
