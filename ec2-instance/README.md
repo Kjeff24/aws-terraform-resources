@@ -183,7 +183,7 @@ terraform init -backend=false
 ├── outputs.tf
 ├── scripts
 │   └── user_data.sh
-└── variable.tf
+└── variables.tf
 ```
 ---
 
