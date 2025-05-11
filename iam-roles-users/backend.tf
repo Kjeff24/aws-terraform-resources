@@ -2,7 +2,7 @@ terraform {
 
   backend "s3" {
     bucket       = "aws-terraform-projects-state-bucket"
-    key          = "ec2-instance/terraform.tfstate"
+    key          = "iam-roles-users/terraform.tfstate"
     region       = "eu-west-1"
     use_lockfile = true
   }

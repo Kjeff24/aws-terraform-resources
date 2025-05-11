@@ -35,3 +35,94 @@ variable "tags" {
     Project     = "Static Website Hosting"
   }
 }
+
+############################
+# 👥 IAM Inputs
+############################
+variable "groups" {
+  description = "IAM groups and their inline least-privilege policies"
+  type = map(object({
+    inline_policies = optional(map(object({
+      description = optional(string)
+      statements = list(object({
+        effect    = optional(string)
+        actions   = list(string)
+        resources = list(string)
+      }))
+    })), {})
+  }))
+  default = {
+    "read-only" = {
+      inline_policies = {
+        "s3-read-example" = {
+          description = "Read-only access to example S3 bucket"
+          statements = [
+            {
+              actions   = ["s3:ListBucket"]
+              resources = ["arn:aws:s3:::example-bucket"]
+            },
+            {
+              actions   = ["s3:GetObject"]
+              resources = ["arn:aws:s3:::example-bucket/*"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+
+variable "users" {
+  description = "IAM users and their group memberships, tags, and assumable roles"
+  type = map(object({
+    groups           = optional(list(string), [])
+    tags             = optional(map(string), {})
+    assumable_roles  = optional(list(string), [])
+  }))
+  default = {
+    "demo" = {
+      groups          = ["read-only"]
+      tags            = { Purpose = "Demo" }
+      assumable_roles = ["ec2-reader"]
+    }
+  }
+}
+
+variable "roles" {
+  description = "IAM roles with trust relationships and inline least-privilege policies"
+  type = map(object({
+    description          = optional(string)
+    assume_services      = optional(list(string), [])
+    assume_account_ids   = optional(list(string), [])
+    max_session_duration = optional(number)
+    inline_policies = optional(map(object({
+      description = optional(string)
+      statements = list(object({
+        effect    = optional(string)
+        actions   = list(string)
+        resources = list(string)
+      }))
+    })), {})
+  }))
+  default = {
+    "ec2-reader" = {
+      description        = "Role for EC2 instances to read from example S3 bucket"
+      assume_services    = ["ec2.amazonaws.com"]
+      assume_account_ids = []
+      inline_policies = {
+        "s3-read-example" = {
+          statements = [
+            {
+              actions   = ["s3:ListBucket"]
+              resources = ["arn:aws:s3:::example-bucket"]
+            },
+            {
+              actions   = ["s3:GetObject"]
+              resources = ["arn:aws:s3:::example-bucket/*"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
