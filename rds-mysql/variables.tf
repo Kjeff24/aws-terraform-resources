@@ -62,7 +62,7 @@ variable "networking" {
   }
 
   validation {
-    condition     = var.networking.public_subnet_count > 2 && var.networking.private_subnet_count > 2
+    condition     = var.networking.public_subnet_count >= 2 && var.networking.private_subnet_count >= 2
     error_message = "public_subnet_count and private_subnet_count must both be greater than 2."
   }
 
