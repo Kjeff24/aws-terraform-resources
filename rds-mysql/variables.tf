@@ -120,7 +120,7 @@ variable "db_config" {
 
   default = {
     engine                       = "mysql"
-    engine_version               = "8.0.35"
+    engine_version               = "8.0.42"
     instance_class               = "db.t3.micro"
     allocated_storage            = 20
     max_allocated_storage        = 100
@@ -130,7 +130,7 @@ variable "db_config" {
     username                     = "admin"
     port                         = 3306
     publicly_accessible          = false
-    deletion_protection          = true
+    deletion_protection          = false
     backup_retention_period      = 7
     backup_window                = "02:00-03:00"
     maintenance_window           = "Sun:03:00-Sun:04:00"
