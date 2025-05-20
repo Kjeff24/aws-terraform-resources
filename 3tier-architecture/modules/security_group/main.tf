@@ -23,7 +23,6 @@ locals {
 # ====================================================
 # PUBLIC SECURITY GROUP (WEB LAYER)
 # ====================================================
-
 resource "aws_security_group" "alb_sg" {
   name        = "${var.project_name}-alb-sg"
   description = "Allow inbound access to ALB from anywhere"
@@ -52,16 +51,15 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = local.egress_all.cidr_blocks
   }
 
-  tags = merge(var.tags, {
+  tags = {
     Name         = "Public Layer Security Group"
     ResourceName = "Public-Layer-SG"
-  })
+  }
 }
 
 # ====================================================
 # PRIVATE SECURITY GROUP (APPLICATION LAYER)
 # ====================================================
-
 resource "aws_security_group" "private_sg" {
   name        = "${var.project_name}-ec2-sg"
   description = "Allow app traffic from ALB (Public SG) only"
@@ -90,16 +88,15 @@ resource "aws_security_group" "private_sg" {
     cidr_blocks = local.egress_all.cidr_blocks
   }
 
-  tags = merge(var.tags, {
+  tags = {
     Name         = "Private App Security Group"
     ResourceName = "Private-App-SG"
-  })
+  }
 }
 
 # ====================================================
 # DATABASE SECURITY GROUP (DB LAYER)
 # ====================================================
-
 resource "aws_security_group" "db_sg" {
   name        = "${var.project_name}-db-sg"
   description = "Allow DB access from Private SG only"
@@ -128,8 +125,8 @@ resource "aws_security_group" "db_sg" {
     cidr_blocks = local.egress_all.cidr_blocks
   }
 
-  tags = merge(var.tags, {
+  tags = {
     Name         = "Database Security Group"
     ResourceName = "Database-SG"
-  })
+  }
 }
