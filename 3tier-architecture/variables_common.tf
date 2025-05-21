@@ -1,5 +1,5 @@
 ############################
-# 🌐 General Configuration
+# 🌐 General Configuration (moved to variables_common.tf)
 ############################
 variable "region" {
   description = "AWS region for deployment"
