@@ -32,6 +32,46 @@ variable "tags" {
   default = {
     Environment = "Development"
     ManagedBy   = "Terraform"
-    Project     = "Static Website Hosting"
+    Project     = "AWS Glue CSV to JSON ETL"
   }
+}
+
+############################
+# 🔄 AWS Glue Configuration (object)
+############################
+variable "glue_job" {
+  description = "Grouped configuration for AWS Glue job and logging"
+  type = object({
+    script_path          = string
+    input_table_prefix   = string
+    output_path          = string
+    worker_type          = string
+    number_of_workers    = number
+    version              = string
+    job_timeout          = number
+    max_retries          = number
+    max_concurrent_runs  = number
+    log_retention_days   = number
+  })
+  default = {
+    script_path          = "scripts/csv-to-json.py"
+    input_table_prefix   = "raw_"
+    output_path          = "output/"
+    worker_type          = "G.1X"
+    number_of_workers    = 2
+    version              = "5.0"
+    job_timeout          = 2880
+    max_retries          = 1
+    max_concurrent_runs  = 1
+    log_retention_days   = 1
+  }
+}
+
+############################
+# 🗓️ Glue Crawler Schedule (separate)
+############################
+variable "crawler_schedule" {
+  description = "Schedule expression for the Glue crawler (e.g., cron or rate). Use null for manual runs."
+  type        = string
+  default     = null
 }
