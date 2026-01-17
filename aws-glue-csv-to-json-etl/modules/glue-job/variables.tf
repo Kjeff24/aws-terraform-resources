@@ -16,7 +16,6 @@ variable "scripts_bucket_name" {
 variable "glue_script_path" {
   description = "Path to the Glue ETL script in S3 (relative to bucket root)"
   type        = string
-  default     = "scripts/csv-to-json.py"
 }
 
 variable "processed_data_bucket_name" {
@@ -32,13 +31,11 @@ variable "input_database" {
 variable "input_table_prefix" {
   description = "Prefix for input table names (e.g., 'raw_')"
   type        = string
-  default     = "raw_"
 }
 
 variable "output_path" {
   description = "Output path in S3 for JSON files (relative to bucket)"
   type        = string
-  default     = "output/"
 }
 
 variable "crawler_name" {
@@ -49,35 +46,29 @@ variable "crawler_name" {
 variable "worker_type" {
   description = "Worker type for the Glue job (G.1X, G.2X, Z.2X)"
   type        = string
-  default     = "G.1X"
 }
 
 variable "number_of_workers" {
   description = "Number of workers for the Glue job"
   type        = number
-  default     = 2
 }
 
 variable "glue_version" {
   description = "Version of AWS Glue to use"
   type        = string
-  default     = "4.0"
 }
 
 variable "job_timeout" {
   description = "Job timeout in minutes"
   type        = number
-  default     = 2880 # 48 hours
 }
 
 variable "max_retries" {
   description = "Maximum number of job retries on failure"
   type        = number
-  default     = 1
 }
 
 variable "max_concurrent_runs" {
   description = "Maximum number of concurrent runs of the job"
   type        = number
-  default     = 1
 }
