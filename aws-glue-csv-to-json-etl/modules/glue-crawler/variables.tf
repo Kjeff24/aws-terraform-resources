@@ -21,5 +21,4 @@ variable "glue_service_role_arn" {
 variable "crawler_schedule" {
   description = "Schedule expression for the crawler (e.g., 'cron(0 2 * * ? *)' for daily at 2 AM, or null for manual)"
   type        = string
-  default     = null
 }
