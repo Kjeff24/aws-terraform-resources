@@ -58,6 +58,7 @@ resource "aws_iam_role_policy" "glue_service_policy" {
         Action = [
           "glue:GetDatabase",
           "glue:GetTable",
+          "glue:GetTables",
           "glue:GetPartitions",
           "glue:CreateTable",
           "glue:UpdateTable"
