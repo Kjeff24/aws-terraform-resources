@@ -17,10 +17,10 @@ resource "aws_glue_job" "csv_to_json" {
     "--enable-glue-datacatalog"  = "true"
     "--TempDir"                  = "s3://${var.processed_data_bucket_name}/temp/"
     "--job-language"             = "python"
-    # "input_database"             = var.input_database
-    # "input_table_prefix"         = var.input_table_prefix
-    # "output_bucket"              = var.processed_data_bucket_name
-    # "output_path"                = var.output_path
+    "--input_database"           = var.input_database
+    "--input_table_prefix"       = var.input_table_prefix
+    "--output_bucket"            = var.processed_data_bucket_name
+    "--output_path"              = var.output_path
   }
 
   worker_type       = var.worker_type
