@@ -36,6 +36,12 @@ variable "tags" {
   }
 }
 
+variable "enable_versioning" {
+  description = "Enable versioning for S3 buckets"
+  type        = bool
+  default     = true
+}
+
 ############################
 # 🔄 AWS Glue Configuration (object)
 ############################

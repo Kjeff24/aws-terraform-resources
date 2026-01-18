@@ -4,7 +4,8 @@
 module "s3" {
   source = "./modules/s3"
 
-  project_name = var.project_name
+  project_name     = var.project_name
+  enable_versioning = var.enable_versioning
 }
 
 

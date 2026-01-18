@@ -17,6 +17,13 @@ resource "aws_s3_bucket" "raw_data_bucket" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "raw_data_bucket_versioning" {
+  bucket = aws_s3_bucket.raw_data_bucket.id
+  versioning_configuration {
+    status = var.enable_versioning ? "Enabled" : "Disabled"
+  }
+}
+
 # Create S3 buckets for processed data
 resource "aws_s3_bucket" "processed_data_bucket" {
   bucket        = local.processed_data_bucket_name
@@ -24,6 +31,13 @@ resource "aws_s3_bucket" "processed_data_bucket" {
 
   tags = {
     Name = "${var.project_name}-processed-data-bucket"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "processed_data_bucket_versioning" {
+  bucket = aws_s3_bucket.processed_data_bucket.id
+  versioning_configuration {
+    status = var.enable_versioning ? "Enabled" : "Disabled"
   }
 }
 
