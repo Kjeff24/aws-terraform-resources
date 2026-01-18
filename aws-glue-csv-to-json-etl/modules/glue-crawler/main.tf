@@ -1,4 +1,9 @@
 ############################
+# Data Sources
+############################
+data "aws_caller_identity" "current" {}
+
+############################
 # Glue Crawler
 ############################
 resource "aws_glue_catalog_database" "raw_data" {
@@ -27,6 +32,14 @@ resource "aws_glue_crawler" "csv_crawler" {
   schema_change_policy {
     delete_behavior = "LOG"
     update_behavior = "UPDATE_IN_DATABASE"
+  }
+
+  dynamic "lake_formation_configuration" {
+    for_each = var.enable_lake_formation ? [1] : []
+    content {
+      use_lake_formation_credentials = true
+      account_id                     = data.aws_caller_identity.current.account_id
+    }
   }
 
   tags = {
