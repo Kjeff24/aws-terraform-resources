@@ -22,3 +22,8 @@ variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number
 }
+
+variable "enable_lake_formation" {
+  description = "Enable Lake Formation integration"
+  type        = bool
+}

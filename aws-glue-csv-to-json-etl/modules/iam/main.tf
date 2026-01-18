@@ -23,13 +23,9 @@ resource "aws_iam_role" "glue_service_role" {
 ############################
 # Glue Service Policy
 ############################
-resource "aws_iam_role_policy" "glue_service_policy" {
-  name = "${var.project_name}-glue-service-policy"
-  role = aws_iam_role.glue_service_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
+locals {
+  policy_statements = concat(
+    [
       {
         Effect = "Allow"
         Action = [
@@ -65,7 +61,26 @@ resource "aws_iam_role_policy" "glue_service_policy" {
         ]
         Resource = "*"
       }
-    ]
+    ],
+    var.enable_lake_formation ? [
+      {
+        Effect = "Allow"
+        Action = [
+          "lakeformation:GetDataAccess"
+        ]
+        Resource = "*"
+      }
+    ] : []
+  )
+}
+
+resource "aws_iam_role_policy" "glue_service_policy" {
+  name = "${var.project_name}-glue-service-policy"
+  role = aws_iam_role.glue_service_role.id
+
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = local.policy_statements
   })
 }
 
@@ -76,5 +91,7 @@ resource "aws_cloudwatch_log_group" "glue_logs" {
   name              = "/aws-glue/${var.project_name}"
   retention_in_days = var.log_retention_days
 
-#   tags = var.tags
+  tags = {
+    Name = "${var.project_name}-glue-logs"
+  }
 }
