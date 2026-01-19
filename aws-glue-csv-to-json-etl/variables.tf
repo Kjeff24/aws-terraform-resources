@@ -42,6 +42,12 @@ variable "enable_versioning" {
   default     = true
 }
 
+variable "enable_lake_formation" {
+  description = "Enable Lake Formation integration for Glue crawler and automatic configuration"
+  type        = bool
+  default     = false
+}
+
 ############################
 # 🔄 AWS Glue Configuration (object)
 ############################

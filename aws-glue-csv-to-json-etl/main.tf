@@ -20,6 +20,7 @@ module "iam" {
   raw_data_bucket_arn        = module.s3.raw_data_bucket_arn
   processed_data_bucket_arn  = module.s3.processed_data_bucket_arn
   log_retention_days         = var.glue_job.log_retention_days
+  enable_lake_formation      = var.enable_lake_formation
 
   depends_on = [module.s3]
 }
@@ -35,8 +36,24 @@ module "glue_crawler" {
   raw_data_bucket_name    = module.s3.raw_data_bucket_name
   glue_service_role_arn   = module.iam.glue_service_role_arn
   crawler_schedule        = var.crawler_schedule
+  enable_lake_formation   = var.enable_lake_formation
 
   depends_on = [module.iam]
+}
+
+############################
+# Lake Formation Module (Conditional)
+############################
+module "lake_formation" {
+  count  = var.enable_lake_formation ? 1 : 0
+  source = "./modules/lake-formation"
+
+  project_name           = var.project_name
+  raw_data_bucket_arn    = module.s3.raw_data_bucket_arn
+  glue_service_role_arn  = module.iam.glue_service_role_arn
+  catalog_database_name  = module.glue_crawler.catalog_database_name
+
+  depends_on = [module.glue_crawler, module.iam]
 }
 
 ############################
