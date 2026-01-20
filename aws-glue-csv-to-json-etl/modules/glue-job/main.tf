@@ -1,3 +1,17 @@
+################################################################################
+# Glue Job Module - ETL Processing and Workflow Automation
+################################################################################
+# This module creates AWS Glue ETL resources for transforming CSV to JSON:
+# - Glue ETL Job: PySpark job that reads CSV from Glue Catalog, transforms
+#   to JSON format, and writes to S3 output location
+# - Glue Workflow: Orchestrates the ETL pipeline execution
+# - Workflow Triggers: 
+#   - ON_DEMAND trigger to start the crawler
+#   - CONDITIONAL trigger to start ETL job after crawler succeeds
+# The job uses job bookmarks for incremental processing and supports
+# configurable worker types, timeouts, and retry policies
+################################################################################
+
 ############################
 # Glue ETL Job
 ############################

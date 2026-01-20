@@ -1,3 +1,14 @@
+################################################################################
+# S3 Module - Storage for Raw Data and Processed Output
+################################################################################
+# This module creates and manages S3 buckets for the ETL pipeline:
+# - Raw data bucket: Stores input CSV files that will be processed
+# - Processed data bucket: Stores output JSON files and Glue ETL scripts
+# - Versioning: Configurable versioning for both buckets
+# - File uploads: Automatically uploads CSV/TXT files from 'files/' directory
+# - Script uploads: Automatically uploads Python scripts from 'scripts/' directory
+################################################################################
+
 resource "random_id" "suffix" {
   byte_length = 4
 }

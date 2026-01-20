@@ -1,3 +1,14 @@
+################################################################################
+# IAM Module - Permissions for AWS Glue Service
+################################################################################
+# This module creates IAM resources required for AWS Glue to operate:
+# - IAM Role: Service role that Glue assumes to access AWS resources
+# - IAM Policy: Grants permissions for S3 access, Glue Catalog operations,
+#   CloudWatch logging, and optionally Lake Formation data access
+# - CloudWatch Log Group: Centralized logging for Glue job execution
+# The role permissions are conditionally enhanced when Lake Formation is enabled
+################################################################################
+
 ############################
 # IAM Role for Glue Service
 ############################

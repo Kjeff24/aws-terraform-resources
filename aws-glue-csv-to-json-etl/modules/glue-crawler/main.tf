@@ -1,3 +1,15 @@
+################################################################################
+# Glue Crawler Module - Data Discovery and Cataloging
+################################################################################
+# This module creates AWS Glue resources for discovering and cataloging data:
+# - Glue Catalog Database: Container for metadata about raw CSV data
+# - Glue Crawler: Automatically discovers CSV files in S3, infers schemas,
+#   and creates table definitions in the Glue Data Catalog
+# - Lake Formation Integration: Optionally configures crawler to use
+#   Lake Formation credentials for fine-grained access control
+# The crawler can run on-demand or on a schedule to keep the catalog updated
+################################################################################
+
 ############################
 # Data Sources
 ############################

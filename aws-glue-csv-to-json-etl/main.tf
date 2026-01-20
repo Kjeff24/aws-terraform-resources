@@ -1,3 +1,15 @@
+################################################################################
+# AWS Glue CSV to JSON ETL Pipeline - Main Configuration
+################################################################################
+# This file orchestrates the complete AWS Glue ETL pipeline infrastructure:
+# - S3 buckets for raw CSV data and processed JSON output
+# - IAM roles and policies for Glue service access
+# - Glue Crawler to discover and catalog CSV files
+# - Glue ETL Job to transform CSV data to JSON format
+# - Optional Lake Formation integration for fine-grained access control
+# - Glue Workflow to automate the ETL process (Crawler → Job)
+################################################################################
+
 ############################
 # S3 Module
 ############################

@@ -1,3 +1,16 @@
+################################################################################
+# Lake Formation Module - Fine-Grained Access Control
+################################################################################
+# This module configures AWS Lake Formation for secure data access:
+# - Resource Registration: Registers S3 bucket location with Lake Formation
+#   to enable centralized access control
+# - Data Location Permissions: Grants the Glue IAM role permission to
+#   access data in the registered S3 location
+# - Database Permissions: Grants CREATE_TABLE permission to allow the
+#   crawler to create tables in the Glue Catalog database
+# This module is conditionally created when enable_lake_formation is true
+################################################################################
+
 ############################
 # Register S3 Location in Lake Formation
 ############################
