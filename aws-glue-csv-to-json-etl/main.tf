@@ -1,18 +1,16 @@
-################################################################################
-# AWS Glue CSV to JSON ETL Pipeline - Main Configuration
-################################################################################
-# This file orchestrates the complete AWS Glue ETL pipeline infrastructure:
-# - S3 buckets for raw CSV data and processed JSON output
-# - IAM roles and policies for Glue service access
-# - Glue Crawler to discover and catalog CSV files
-# - Glue ETL Job to transform CSV data to JSON format
-# - Optional Lake Formation integration for fine-grained access control
-# - Glue Workflow to automate the ETL process (Crawler → Job)
-################################################################################
+/*
+AWS Glue CSV to JSON ETL Pipeline - Main Configuration
 
-############################
+This file orchestrates the complete AWS Glue ETL pipeline infrastructure:
+- S3 buckets for raw CSV data and processed JSON output
+- IAM roles and policies for Glue service access
+- Glue Crawler to discover and catalog CSV files
+- Glue ETL Job to transform CSV data to JSON format
+- Optional Lake Formation integration for fine-grained access control
+- Glue Workflow to automate the ETL process (Crawler → Job)
+*/
+
 # S3 Module
-############################
 module "s3" {
   source = "./modules/s3"
 
@@ -21,9 +19,7 @@ module "s3" {
 }
 
 
-############################
 # IAM Module
-############################
 module "iam" {
   source = "./modules/iam"
 
@@ -37,9 +33,7 @@ module "iam" {
   depends_on = [module.s3]
 }
 
-############################
 # Glue Crawler Module
-############################
 module "glue_crawler" {
   source = "./modules/glue-crawler"
 
@@ -53,9 +47,7 @@ module "glue_crawler" {
   depends_on = [module.iam]
 }
 
-############################
 # Lake Formation Module (Conditional)
-############################
 module "lake_formation" {
   count  = var.enable_lake_formation ? 1 : 0
   source = "./modules/lake-formation"
@@ -68,9 +60,7 @@ module "lake_formation" {
   depends_on = [module.glue_crawler, module.iam]
 }
 
-############################
 # Glue Job Module
-############################
 module "glue_job" {
   source = "./modules/glue-job"
 

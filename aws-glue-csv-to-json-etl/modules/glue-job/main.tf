@@ -1,20 +1,18 @@
-################################################################################
-# Glue Job Module - ETL Processing and Workflow Automation
-################################################################################
-# This module creates AWS Glue ETL resources for transforming CSV to JSON:
-# - Glue ETL Job: PySpark job that reads CSV from Glue Catalog, transforms
-#   to JSON format, and writes to S3 output location
-# - Glue Workflow: Orchestrates the ETL pipeline execution
-# - Workflow Triggers: 
-#   - ON_DEMAND trigger to start the crawler
-#   - CONDITIONAL trigger to start ETL job after crawler succeeds
-# The job uses job bookmarks for incremental processing and supports
-# configurable worker types, timeouts, and retry policies
-################################################################################
+/*
+Glue Job Module - ETL Processing and Workflow Automation
 
-############################
+This module creates AWS Glue ETL resources for transforming CSV to JSON:
+- Glue ETL Job: PySpark job that reads CSV from Glue Catalog, transforms
+  to JSON format, and writes to S3 output location
+- Glue Workflow: Orchestrates the ETL pipeline execution
+- Workflow Triggers: 
+  - ON_DEMAND trigger to start the crawler
+  - CONDITIONAL trigger to start ETL job after crawler succeeds
+The job uses job bookmarks for incremental processing and supports
+configurable worker types, timeouts, and retry policies
+*/
+
 # Glue ETL Job
-############################
 resource "aws_glue_job" "csv_to_json" {
   name              = "${var.project_name}-csv-to-json"
   role_arn          = var.glue_service_role_arn
@@ -52,9 +50,7 @@ resource "aws_glue_job" "csv_to_json" {
   }
 }
 
-############################
 # Glue Workflow
-############################
 resource "aws_glue_workflow" "csv_to_json_workflow" {
   name        = "${var.project_name}-workflow"
   description = "Automated ETL workflow: Crawl CSV → Transform to JSON"
@@ -64,9 +60,7 @@ resource "aws_glue_workflow" "csv_to_json_workflow" {
   }
 }
 
-############################
 # Workflow Trigger for Crawler
-############################
 resource "aws_glue_trigger" "crawler_trigger" {
   name          = "${var.project_name}-start-crawler"
   type          = "ON_DEMAND"
@@ -77,9 +71,7 @@ resource "aws_glue_trigger" "crawler_trigger" {
   }
 }
 
-############################
 # Workflow Trigger for ETL Job
-############################
 resource "aws_glue_trigger" "job_trigger" {
   name            = "${var.project_name}-start-job"
   type            = "CONDITIONAL"
