@@ -1,17 +1,15 @@
-################################################################################
-# IAM Module - Permissions for AWS Glue Service
-################################################################################
-# This module creates IAM resources required for AWS Glue to operate:
-# - IAM Role: Service role that Glue assumes to access AWS resources
-# - IAM Policy: Grants permissions for S3 access, Glue Catalog operations,
-#   CloudWatch logging, and optionally Lake Formation data access
-# - CloudWatch Log Group: Centralized logging for Glue job execution
-# The role permissions are conditionally enhanced when Lake Formation is enabled
-################################################################################
+/*
+IAM Module - Permissions for AWS Glue Service
 
-############################
+This module creates IAM resources required for AWS Glue to operate:
+- IAM Role: Service role that Glue assumes to access AWS resources
+- IAM Policy: Grants permissions for S3 access, Glue Catalog operations,
+  CloudWatch logging, and optionally Lake Formation data access
+- CloudWatch Log Group: Centralized logging for Glue job execution
+The role permissions are conditionally enhanced when Lake Formation is enabled
+*/
+
 # IAM Role for Glue Service
-############################
 resource "aws_iam_role" "glue_service_role" {
   name = "${var.project_name}-glue-service-role"
 
@@ -31,9 +29,7 @@ resource "aws_iam_role" "glue_service_role" {
 #   tags = var.tags
 }
 
-############################
 # Glue Service Policy
-############################
 locals {
   policy_statements = concat(
     [
@@ -95,9 +91,7 @@ resource "aws_iam_role_policy" "glue_service_policy" {
   })
 }
 
-############################
 # CloudWatch Log Group
-############################
 resource "aws_cloudwatch_log_group" "glue_logs" {
   name              = "/aws-glue/${var.project_name}"
   retention_in_days = var.log_retention_days
