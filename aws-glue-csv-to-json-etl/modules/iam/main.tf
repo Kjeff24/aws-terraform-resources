@@ -1,0 +1,108 @@
+################################################################################
+# IAM Module - Permissions for AWS Glue Service
+################################################################################
+# This module creates IAM resources required for AWS Glue to operate:
+# - IAM Role: Service role that Glue assumes to access AWS resources
+# - IAM Policy: Grants permissions for S3 access, Glue Catalog operations,
+#   CloudWatch logging, and optionally Lake Formation data access
+# - CloudWatch Log Group: Centralized logging for Glue job execution
+# The role permissions are conditionally enhanced when Lake Formation is enabled
+################################################################################
+
+############################
+# IAM Role for Glue Service
+############################
+resource "aws_iam_role" "glue_service_role" {
+  name = "${var.project_name}-glue-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+#   tags = var.tags
+}
+
+############################
+# Glue Service Policy
+############################
+locals {
+  policy_statements = concat(
+    [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "${var.raw_data_bucket_arn}",
+          "${var.raw_data_bucket_arn}/*",
+          "${var.processed_data_bucket_arn}",
+          "${var.processed_data_bucket_arn}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.region}:*:log-group:/aws-glue/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:GetDatabase",
+          "glue:GetTable",
+          "glue:GetTables",
+          "glue:GetPartitions",
+          "glue:CreateTable",
+          "glue:UpdateTable"
+        ]
+        Resource = "*"
+      }
+    ],
+    var.enable_lake_formation ? [
+      {
+        Effect = "Allow"
+        Action = [
+          "lakeformation:GetDataAccess"
+        ]
+        Resource = "*"
+      }
+    ] : []
+  )
+}
+
+resource "aws_iam_role_policy" "glue_service_policy" {
+  name = "${var.project_name}-glue-service-policy"
+  role = aws_iam_role.glue_service_role.id
+
+  policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = local.policy_statements
+  })
+}
+
+############################
+# CloudWatch Log Group
+############################
+resource "aws_cloudwatch_log_group" "glue_logs" {
+  name              = "/aws-glue/${var.project_name}"
+  retention_in_days = var.log_retention_days
+
+  tags = {
+    Name = "${var.project_name}-glue-logs"
+  }
+}
