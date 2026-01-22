@@ -17,3 +17,8 @@ variable "catalog_database_name" {
   description = "Name of the Glue Catalog database"
   type        = string
 }
+
+variable "database_permissions" {
+  description = "List of permissions to grant for database access"
+  type        = list(string)
+}

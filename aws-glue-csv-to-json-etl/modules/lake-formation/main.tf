@@ -32,7 +32,7 @@ resource "aws_lakeformation_permissions" "data_location_permissions" {
 # Grant Database Permissions to Glue IAM Role
 resource "aws_lakeformation_permissions" "database_permissions" {
   principal   = var.glue_service_role_arn
-  permissions = ["CREATE_TABLE"]
+  permissions = var.database_permissions
 
   database {
     name = var.catalog_database_name
