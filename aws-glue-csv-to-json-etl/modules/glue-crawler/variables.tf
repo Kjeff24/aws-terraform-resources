@@ -27,3 +27,8 @@ variable "enable_lake_formation" {
   description = "Enable Lake Formation integration for the crawler"
   type        = bool
 }
+
+variable "catalog_database_name" {
+  description = "Name of the Glue Catalog database (must already exist)"
+  type        = string
+}

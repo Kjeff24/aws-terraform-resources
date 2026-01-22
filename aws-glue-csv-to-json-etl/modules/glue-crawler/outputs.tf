@@ -10,10 +10,10 @@ output "crawler_arn" {
 
 output "catalog_database_name" {
   description = "Name of the Glue Catalog database"
-  value       = aws_glue_catalog_database.raw_data.name
+  value       = var.catalog_database_name
 }
 
 output "catalog_database_arn" {
   description = "ARN of the Glue Catalog database"
-  value       = aws_glue_catalog_database.raw_data.arn
+  value       = null  # Database ARN is available from glue-database module
 }
