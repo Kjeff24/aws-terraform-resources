@@ -28,13 +28,37 @@ module "iam" {
   raw_data_bucket_arn        = module.s3.raw_data_bucket_arn
   processed_data_bucket_arn  = module.s3.processed_data_bucket_arn
   log_retention_days         = var.glue_job.log_retention_days
-  enable_lake_formation      = var.enable_lake_formation
+  enable_lake_formation      = var.lake_formation.enable
 
   depends_on = [module.s3]
 }
 
-# Glue Crawler Module
+# Glue Database Module - Created first (needed by both Lake Formation and Crawler)
+module "glue_database" {
+  source = "./modules/glue-database"
+
+  project_name = var.project_name
+
+  depends_on = [module.iam]
+}
+
+# Lake Formation Module (Conditional) - Must be created BEFORE crawler when LF is enabled
+module "lake_formation" {
+  count  = var.lake_formation.enable ? 1 : 0
+  source = "./modules/lake-formation"
+
+  project_name          = var.project_name
+  raw_data_bucket_arn   = module.s3.raw_data_bucket_arn
+  glue_service_role_arn = module.iam.glue_service_role_arn
+  catalog_database_name = module.glue_database.database_name
+  database_permissions  = var.lake_formation.database_permissions
+
+  depends_on = [module.iam, module.glue_database]
+}
+
+# Glue Crawler Module - With Lake Formation (when enabled)
 module "glue_crawler" {
+  count  = var.lake_formation.enable ? 1 : 0
   source = "./modules/glue-crawler"
 
   project_name            = var.project_name
@@ -42,22 +66,38 @@ module "glue_crawler" {
   raw_data_bucket_name    = module.s3.raw_data_bucket_name
   glue_service_role_arn   = module.iam.glue_service_role_arn
   crawler_schedule        = var.crawler_schedule
-  enable_lake_formation   = var.enable_lake_formation
+  enable_lake_formation   = var.lake_formation.enable
+  catalog_database_name   = module.glue_database.database_name
 
-  depends_on = [module.iam]
+  depends_on = [
+    module.iam,
+    module.glue_database,
+    module.lake_formation[0]
+  ]
 }
 
-# Lake Formation Module (Conditional)
-module "lake_formation" {
-  count  = var.enable_lake_formation ? 1 : 0
-  source = "./modules/lake-formation"
+# Glue Crawler Module - Without Lake Formation (when disabled)
+module "glue_crawler_no_lf" {
+  count  = var.lake_formation.enable ? 0 : 1
+  source = "./modules/glue-crawler"
 
-  project_name           = var.project_name
-  raw_data_bucket_arn    = module.s3.raw_data_bucket_arn
-  glue_service_role_arn  = module.iam.glue_service_role_arn
-  catalog_database_name  = module.glue_crawler.catalog_database_name
+  project_name            = var.project_name
+  region                  = var.region
+  raw_data_bucket_name    = module.s3.raw_data_bucket_name
+  glue_service_role_arn   = module.iam.glue_service_role_arn
+  crawler_schedule        = var.crawler_schedule
+  enable_lake_formation   = var.lake_formation.enable
+  catalog_database_name   = module.glue_database.database_name
 
-  depends_on = [module.glue_crawler, module.iam]
+  depends_on = [
+    module.iam,
+    module.glue_database
+  ]
+}
+
+# Local to get the active crawler module
+locals {
+  crawler_module = var.lake_formation.enable ? module.glue_crawler[0] : module.glue_crawler_no_lf[0]
 }
 
 # Glue Job Module
@@ -69,10 +109,10 @@ module "glue_job" {
   scripts_bucket_name        = module.s3.processed_data_bucket_name
   glue_script_path           = var.glue_job.script_path
   processed_data_bucket_name = module.s3.processed_data_bucket_name
-  input_database             = module.glue_crawler.catalog_database_name
+  input_database             = local.crawler_module.catalog_database_name
   input_table_prefix         = var.glue_job.input_table_prefix
   output_path                = var.glue_job.output_path
-  crawler_name               = module.glue_crawler.crawler_name
+  crawler_name               = local.crawler_module.crawler_name
   worker_type                = var.glue_job.worker_type
   number_of_workers          = var.glue_job.number_of_workers
   glue_version               = var.glue_job.version
@@ -80,5 +120,5 @@ module "glue_job" {
   max_retries                = var.glue_job.max_retries
   max_concurrent_runs        = var.glue_job.max_concurrent_runs
 
-  depends_on = [module.glue_crawler]
+  depends_on = [local.crawler_module]
 }

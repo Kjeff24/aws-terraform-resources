@@ -14,7 +14,7 @@ variable "region" {
 variable "project_name" {
   description = "Project name used for resource naming and tagging"
   type        = string
-  default     = "aws-glue-csv-to-json-etl"
+  default     = "glue-csv-to-json"
 
   validation {
     condition = (
@@ -42,10 +42,19 @@ variable "enable_versioning" {
   default     = true
 }
 
-variable "enable_lake_formation" {
-  description = "Enable Lake Formation integration for Glue crawler and automatic configuration"
-  type        = bool
-  default     = false
+############################
+# 🏞️ AWS Lake Formation Configuration (object)
+############################
+variable "lake_formation" {
+  description = "Configuration for AWS Lake Formation integration"
+  type = object({
+    enable               = bool
+    database_permissions = list(string)
+  })
+  default = {
+    enable               = true
+    database_permissions = ["CREATE_TABLE"]
+  }
 }
 
 ############################
