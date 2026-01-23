@@ -13,11 +13,6 @@ variable "scripts_bucket_name" {
   type        = string
 }
 
-variable "glue_script_path" {
-  description = "Path to the Glue ETL script in S3 (relative to bucket root)"
-  type        = string
-}
-
 variable "processed_data_bucket_name" {
   description = "Name of the S3 bucket for processed data output"
   type        = string
@@ -28,52 +23,27 @@ variable "input_database" {
   type        = string
 }
 
-variable "input_table_prefix" {
-  description = "Prefix for input table names (e.g., 'raw_')"
-  type        = string
-}
-
-variable "output_path" {
-  description = "Output path in S3 for processed files (relative to bucket)"
-  type        = string
-}
-
-variable "output_format" {
-  description = "Output file format: json, parquet, csv, orc"
-  type        = string
-}
-
 variable "crawler_name" {
   description = "Name of the Glue crawler that triggers the job"
   type        = string
 }
 
-variable "worker_type" {
-  description = "Worker type for the Glue job (G.1X, G.2X, Z.2X)"
-  type        = string
-}
-
-variable "number_of_workers" {
-  description = "Number of workers for the Glue job"
-  type        = number
-}
-
-variable "glue_version" {
-  description = "Version of AWS Glue to use"
-  type        = string
-}
-
-variable "job_timeout" {
-  description = "Job timeout in minutes"
-  type        = number
-}
-
-variable "max_retries" {
-  description = "Maximum number of job retries on failure"
-  type        = number
-}
-
-variable "max_concurrent_runs" {
-  description = "Maximum number of concurrent runs of the job"
-  type        = number
+variable "glue_job_config" {
+  description = "Configuration for the Glue ETL job"
+  type = object({
+    script_path            = string
+    input_table_prefix     = string
+    output_path            = string
+    output_format          = string
+    worker_type            = string
+    number_of_workers      = number
+    version                = string
+    job_timeout            = number
+    max_retries            = number
+    max_concurrent_runs    = number
+    enable_quality_checks  = bool
+    quality_report_path    = string
+    bad_data_path          = string
+    filter_bad_data        = bool
+  })
 }

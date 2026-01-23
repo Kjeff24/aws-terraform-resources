@@ -18,7 +18,7 @@ resource "aws_glue_job" "csv_to_json" {
   role_arn          = var.glue_service_role_arn
   command {
     name            = "glueetl"
-    script_location = "s3://${var.scripts_bucket_name}/${var.glue_script_path}"
+    script_location = "s3://${var.scripts_bucket_name}/${var.glue_job_config.script_path}"
     python_version  = "3"
   }
 
@@ -30,20 +30,24 @@ resource "aws_glue_job" "csv_to_json" {
     "--TempDir"                  = "s3://${var.processed_data_bucket_name}/temp/"
     "--job-language"             = "python"
     "--input_database"           = var.input_database
-    "--input_table_prefix"       = var.input_table_prefix
+    "--input_table_prefix"       = var.glue_job_config.input_table_prefix
     "--output_bucket"            = var.processed_data_bucket_name
-    "--output_path"              = var.output_path
-    "--output_format"            = var.output_format
+    "--output_path"              = var.glue_job_config.output_path
+    "--output_format"            = var.glue_job_config.output_format
+    "--enable_quality_checks"   = tostring(var.glue_job_config.enable_quality_checks)
+    "--quality_report_path"     = var.glue_job_config.quality_report_path
+    "--bad_data_path"            = var.glue_job_config.bad_data_path
+    "--filter_bad_data"          = tostring(var.glue_job_config.filter_bad_data)
   }
 
-  worker_type       = var.worker_type
-  number_of_workers = var.number_of_workers
-  glue_version      = var.glue_version
-  timeout           = var.job_timeout
-  max_retries       = var.max_retries
+  worker_type       = var.glue_job_config.worker_type
+  number_of_workers = var.glue_job_config.number_of_workers
+  glue_version      = var.glue_job_config.version
+  timeout           = var.glue_job_config.job_timeout
+  max_retries       = var.glue_job_config.max_retries
 
   execution_property {
-    max_concurrent_runs = var.max_concurrent_runs
+    max_concurrent_runs = var.glue_job_config.max_concurrent_runs
   }
 
   tags = {
