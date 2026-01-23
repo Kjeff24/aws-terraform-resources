@@ -33,6 +33,7 @@ resource "aws_glue_job" "csv_to_json" {
     "--input_table_prefix"       = var.input_table_prefix
     "--output_bucket"            = var.processed_data_bucket_name
     "--output_path"              = var.output_path
+    "--output_format"            = var.output_format
   }
 
   worker_type       = var.worker_type

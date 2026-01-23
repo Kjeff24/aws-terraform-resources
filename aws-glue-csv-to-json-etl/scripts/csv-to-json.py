@@ -16,6 +16,7 @@ args = getResolvedOptions(
         "input_table_prefix",
         "output_bucket",
         "output_path",
+        "output_format",
     ],
 )
 
@@ -31,6 +32,12 @@ input_db = args["input_database"]
 prefix = args["input_table_prefix"]
 output_bucket = args["output_bucket"]
 output_path = args["output_path"].rstrip("/")
+output_format = args.get("output_format", "json").lower()  # Default to json for backward compatibility
+
+# Supported output formats
+SUPPORTED_FORMATS = ["json", "parquet", "csv", "orc"]
+if output_format not in SUPPORTED_FORMATS:
+    raise ValueError(f"Unsupported output format: {output_format}. Supported formats: {SUPPORTED_FORMATS}")
 
 # Discover catalog tables with the specified prefix
 matching_tables = []
@@ -73,14 +80,15 @@ try:
     else:
         print(f"Found {len(matching_tables)} table(s): {matching_tables}")
 
-    # Process each matching table: read CSV via Data Catalog and write JSON to S3
+    # Process each matching table: read from Data Catalog and write to S3 in specified format
+    print(f"Output format: {output_format.upper()}")
     for table_name in matching_tables:
         try:
             print(f"\n{'='*60}")
             print(f"Processing table: {table_name}")
             print(f"{'='*60}")
             
-            # Read from Glue Data Catalog
+            # Read from Glue Data Catalog (supports CSV, JSON, Parquet, etc.)
             dyf = glueContext.create_dynamic_frame.from_catalog(
                 database=input_db,
                 table_name=table_name,
@@ -92,22 +100,29 @@ try:
             print(f"Records found in table '{table_name}': {record_count}")
             
             if record_count == 0:
-                print(f"WARNING: Table '{table_name}' is empty. Skipping JSON output.")
+                print(f"WARNING: Table '{table_name}' is empty. Skipping {output_format.upper()} output.")
                 continue
             
-            # Convert to Spark DataFrame and write JSON
+            # Convert to Spark DataFrame
             df = dyf.toDF()
             target = f"s3://{output_bucket}/{output_path}/{table_name}/"
             
-            print(f"Writing JSON to: {target}")
-            (
-                df.write
-                .mode("overwrite")  # overwrite per run; adjust if needed
-                .json(target)
-            )
+            print(f"Writing {output_format.upper()} to: {target}")
+            
+            # Write in the specified format
+            writer = df.write.mode("overwrite")
+            
+            if output_format == "json":
+                writer.json(target)
+            elif output_format == "parquet":
+                writer.parquet(target)
+            elif output_format == "csv":
+                writer.option("header", "true").csv(target)
+            elif output_format == "orc":
+                writer.orc(target)
             
             # Verify write by checking if output path exists (basic validation)
-            print(f"Successfully wrote {record_count} records to {target}")
+            print(f"Successfully wrote {record_count} records to {target} in {output_format.upper()} format")
             processed_count += 1
             
         except Exception as e:

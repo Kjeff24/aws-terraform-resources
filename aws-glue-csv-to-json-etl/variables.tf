@@ -66,6 +66,7 @@ variable "glue_job" {
     script_path          = string
     input_table_prefix   = string
     output_path          = string
+    output_format        = string
     worker_type          = string
     number_of_workers    = number
     version              = string
@@ -78,6 +79,7 @@ variable "glue_job" {
     script_path          = "scripts/csv-to-json.py"
     input_table_prefix   = "raw_"
     output_path          = "output/"
+    output_format        = "json"
     worker_type          = "G.1X"
     number_of_workers    = 2
     version              = "5.0"
@@ -85,6 +87,10 @@ variable "glue_job" {
     max_retries          = 1
     max_concurrent_runs  = 1
     log_retention_days   = 1
+  }
+  validation {
+    condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))
+    error_message = "output_format must be one of: json, parquet, csv, orc (case-insensitive)."
   }
 }
 

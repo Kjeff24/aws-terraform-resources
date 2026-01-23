@@ -34,7 +34,12 @@ variable "input_table_prefix" {
 }
 
 variable "output_path" {
-  description = "Output path in S3 for JSON files (relative to bucket)"
+  description = "Output path in S3 for processed files (relative to bucket)"
+  type        = string
+}
+
+variable "output_format" {
+  description = "Output file format: json, parquet, csv, orc"
   type        = string
 }
 
