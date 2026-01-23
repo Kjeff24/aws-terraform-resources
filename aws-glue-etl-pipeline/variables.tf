@@ -78,6 +78,7 @@ variable "glue_job" {
     quality_report_path   = string
     bad_data_path         = string
     filter_bad_data       = bool
+    job_bookmark_option   = string
   })
   default = {
     script_path          = "scripts/glue-etl-job.py"
@@ -91,14 +92,19 @@ variable "glue_job" {
     max_retries          = 1
     max_concurrent_runs  = 1
     log_retention_days   = 1
-    enable_quality_checks = false
+    enable_quality_checks = true
     quality_report_path   = "quality-reports/"
     bad_data_path         = "bad-data/"
-    filter_bad_data       = false
+    filter_bad_data       = true
+    job_bookmark_option   = "job-bookmark-enable"
   }
   validation {
     condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))
     error_message = "output_format must be one of: json, parquet, csv, orc (case-insensitive)."
+  }
+  validation {
+    condition     = contains(["job-bookmark-enable", "job-bookmark-disable", "job-bookmark-pause"], var.glue_job.job_bookmark_option)
+    error_message = "job_bookmark_option must be one of: job-bookmark-enable, job-bookmark-disable, job-bookmark-pause."
   }
 }
 

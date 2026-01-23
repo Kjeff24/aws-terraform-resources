@@ -45,5 +45,6 @@ variable "glue_job_config" {
     quality_report_path    = string
     bad_data_path          = string
     filter_bad_data        = bool
+    job_bookmark_option    = string
   })
 }
