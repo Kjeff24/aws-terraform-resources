@@ -107,19 +107,10 @@ module "glue_job" {
   project_name               = var.project_name
   glue_service_role_arn      = module.iam.glue_service_role_arn
   scripts_bucket_name        = module.s3.processed_data_bucket_name
-  glue_script_path           = var.glue_job.script_path
   processed_data_bucket_name = module.s3.processed_data_bucket_name
   input_database             = local.crawler_module.catalog_database_name
-  input_table_prefix         = var.glue_job.input_table_prefix
-  output_path                = var.glue_job.output_path
-  output_format              = var.glue_job.output_format
   crawler_name               = local.crawler_module.crawler_name
-  worker_type                = var.glue_job.worker_type
-  number_of_workers          = var.glue_job.number_of_workers
-  glue_version               = var.glue_job.version
-  job_timeout                = var.glue_job.job_timeout
-  max_retries                = var.glue_job.max_retries
-  max_concurrent_runs        = var.glue_job.max_concurrent_runs
+  glue_job_config            = var.glue_job
 
   depends_on = [local.crawler_module]
 }

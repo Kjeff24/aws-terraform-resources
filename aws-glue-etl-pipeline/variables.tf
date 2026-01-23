@@ -74,9 +74,13 @@ variable "glue_job" {
     max_retries          = number
     max_concurrent_runs  = number
     log_retention_days   = number
+    enable_quality_checks = bool
+    quality_report_path   = string
+    bad_data_path         = string
+    filter_bad_data       = bool
   })
   default = {
-    script_path          = "scripts/csv-to-json.py"
+    script_path          = "scripts/glue-etl-job.py"
     input_table_prefix   = "raw_"
     output_path          = "output/"
     output_format        = "json"
@@ -87,6 +91,10 @@ variable "glue_job" {
     max_retries          = 1
     max_concurrent_runs  = 1
     log_retention_days   = 1
+    enable_quality_checks = false
+    quality_report_path   = "quality-reports/"
+    bad_data_path         = "bad-data/"
+    filter_bad_data       = false
   }
   validation {
     condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))
