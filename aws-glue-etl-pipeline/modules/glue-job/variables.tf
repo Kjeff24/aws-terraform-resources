@@ -48,5 +48,7 @@ variable "glue_job_config" {
     job_bookmark_option    = string
     enable_partitioning    = bool
     partition_columns      = string
+    enable_job_insights    = bool
+    enable_spark_ui        = bool
   })
 }

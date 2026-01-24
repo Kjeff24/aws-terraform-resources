@@ -81,6 +81,8 @@ variable "glue_job" {
     job_bookmark_option   = string
     enable_partitioning   = bool
     partition_columns     = string
+    enable_job_insights   = bool
+    enable_spark_ui       = bool
   })
   default = {
     script_path          = "scripts/glue-etl-job.py"
@@ -101,6 +103,8 @@ variable "glue_job" {
     job_bookmark_option   = "job-bookmark-disable"
     enable_partitioning   = true
     partition_columns     = "year,month,day"
+    enable_job_insights   = true
+    enable_spark_ui       = true
   }
   validation {
     condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))

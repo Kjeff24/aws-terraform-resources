@@ -23,7 +23,8 @@ resource "aws_glue_job" "csv_to_json" {
   }
 
   default_arguments = {
-    "--enable-spark-ui"          = "true"
+    "--enable-spark-ui"          = tostring(var.glue_job_config.enable_spark_ui)
+    "--enable-job-insights"      = tostring(var.glue_job_config.enable_job_insights)
     "--spark-event-logs-path"    = "s3://${var.processed_data_bucket_name}/spark-logs/"
     "--enable-glue-datacatalog"  = "true"
     "--TempDir"                  = "s3://${var.processed_data_bucket_name}/temp/"
