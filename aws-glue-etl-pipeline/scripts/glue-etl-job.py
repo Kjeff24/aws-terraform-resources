@@ -39,6 +39,26 @@ args = getResolvedOptions(
     ],
 )
 
+# JOB_RUN_ID is automatically provided by AWS Glue (reserved argument)
+# Extract it from sys.argv since it's not available in getResolvedOptions
+job_run_id = ""
+for i, arg in enumerate(sys.argv):
+    if arg == "--JOB_RUN_ID" and i + 1 < len(sys.argv):
+        job_run_id = sys.argv[i + 1]
+        break
+
+if not job_run_id:
+    # Fallback: use timestamp if JOB_RUN_ID not available
+    job_run_id = f"manual_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+
+# Extract short ID from full run ID (e.g., "jr_abc123..." -> "abc123")
+# Format: jr_<hash> -> extract hash part
+if "_" in job_run_id:
+    job_run_short = job_run_id.split("_", 1)[-1][:16]  # Get hash part, limit to 16 chars
+else:
+    job_run_short = job_run_id[:16]
+print(f"Job Run ID: {job_run_id} (short: {job_run_short})")
+
 sc = SparkContext()
 sc.setLogLevel("WARN")
 
@@ -158,10 +178,17 @@ def perform_quality_checks(df, table_name):
     
     return metrics, df
 
-def write_quality_report(metrics, output_bucket, report_path, table_name):
-    """Write quality report to S3 as JSON."""
+def write_quality_report(metrics, output_bucket, report_path, table_name, job_run_short):
+    """Write quality report to S3 as JSON.
+    
+    Uses job run ID to ensure one report per job run per table.
+    Format: table_name_jobrunid.json
+    If the same job run processes the same table multiple times, the report will be overwritten.
+    """
     s3_client = boto3.client("s3")
-    report_key = f"{report_path}/{table_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    # Use job run ID to make report unique per job run per table
+    # This ensures one report per table per job run (retries will overwrite)
+    report_key = f"{report_path}/{table_name}_{job_run_short}.json"
     
     try:
         report_json = json.dumps(metrics, indent=2)
@@ -315,11 +342,16 @@ try:
                     df_clean = df_checked
                 
                 # Write quality report
-                report_key = write_quality_report(quality_metrics, output_bucket, quality_report_path, table_name)
+                print(f"\nWriting quality report for table '{table_name}'...")
+                report_key = write_quality_report(quality_metrics, output_bucket, quality_report_path, table_name, job_run_short)
                 if report_key:
                     quality_reports.append(report_key)
+                    print(f"Quality report successfully written.")
+                else:
+                    print(f"WARNING: Quality report was not written.")
             
             # Add partition columns if enabled
+            print(f"\nPreparing to write output data...")
             if enable_partitioning:
                 df_clean = add_partition_columns(df_clean, partition_columns)
                 print(f"Partitioning enabled: {', '.join(partition_columns)}")
