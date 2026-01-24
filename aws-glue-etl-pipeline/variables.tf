@@ -79,6 +79,8 @@ variable "glue_job" {
     bad_data_path         = string
     filter_bad_data       = bool
     job_bookmark_option   = string
+    enable_partitioning   = bool
+    partition_columns     = string
   })
   default = {
     script_path          = "scripts/glue-etl-job.py"
@@ -96,7 +98,9 @@ variable "glue_job" {
     quality_report_path   = "quality-reports/"
     bad_data_path         = "bad-data/"
     filter_bad_data       = true
-    job_bookmark_option   = "job-bookmark-enable"
+    job_bookmark_option   = "job-bookmark-disable"
+    enable_partitioning   = true
+    partition_columns     = "year,month,day"
   }
   validation {
     condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))

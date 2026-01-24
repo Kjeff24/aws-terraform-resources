@@ -1,5 +1,6 @@
 import sys
 import json
+import traceback
 import boto3
 from datetime import datetime
 from awsglue.context import GlueContext
@@ -9,6 +10,15 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, DateType, TimestampType
 from botocore.exceptions import ClientError
+
+# Partition column mapping for processing time
+PARTITION_COLUMN_MAP = {
+    "year": lambda ts: F.year(ts),
+    "month": lambda ts: F.month(ts),
+    "day": lambda ts: F.dayofmonth(ts),
+    "hour": lambda ts: F.hour(ts),
+    "minute": lambda ts: F.minute(ts),
+}
 
 # Expected job arguments passed from Terraform default_arguments
 args = getResolvedOptions(
@@ -24,6 +34,8 @@ args = getResolvedOptions(
         "quality_report_path",
         "bad_data_path",
         "filter_bad_data",
+        "enable_partitioning",
+        "partition_columns",
     ],
 )
 
@@ -44,11 +56,37 @@ enable_quality_checks = args.get("enable_quality_checks", "false").lower() == "t
 quality_report_path = args.get("quality_report_path", "quality-reports/").rstrip("/")
 bad_data_path = args.get("bad_data_path", "bad-data/").rstrip("/")
 filter_bad_data = args.get("filter_bad_data", "false").lower() == "true"
+enable_partitioning = args.get("enable_partitioning", "false").lower() == "true"
+partition_columns_str = args.get("partition_columns", "year,month,day")
+partition_columns = [col.strip() for col in partition_columns_str.split(",")] if enable_partitioning else []
 
 # Supported output formats
 SUPPORTED_FORMATS = ["json", "parquet", "csv", "orc"]
 if output_format not in SUPPORTED_FORMATS:
     raise ValueError(f"Unsupported output format: {output_format}. Supported formats: {SUPPORTED_FORMATS}")
+
+def add_partition_columns(df, partition_cols):
+    """
+    Add processing time partition columns to DataFrame.
+    Returns DataFrame with partition columns added.
+    """
+    if not partition_cols:
+        return df
+    
+    df_with_partitions = df
+    processing_timestamp = F.current_timestamp()
+    
+    for col_name in partition_cols:
+        col_name_lower = col_name.lower()
+        if col_name_lower in PARTITION_COLUMN_MAP:
+            df_with_partitions = df_with_partitions.withColumn(
+                col_name_lower,
+                PARTITION_COLUMN_MAP[col_name_lower](processing_timestamp)
+            )
+        else:
+            print(f"WARNING: Unknown partition column '{col_name}', skipping.")
+    
+    return df_with_partitions
 
 def perform_quality_checks(df, table_name):
     """
@@ -246,10 +284,19 @@ try:
                         bad_count = df_bad.count()
                         print(f"\nFiltered {bad_count} bad record(s) (duplicates)")
                         
+                        # Add partition columns if enabled
+                        if enable_partitioning:
+                            df_bad = add_partition_columns(df_bad, partition_columns)
+                        
                         # Write bad data to separate location
                         bad_target = f"s3://{output_bucket}/{bad_data_path}/{table_name}/"
                         print(f"Writing bad data to: {bad_target}")
-                        writer_bad = df_bad.write.mode("overwrite")
+                        write_mode = "append" if enable_partitioning else "overwrite"
+                        writer_bad = df_bad.write.mode(write_mode)
+                        
+                        if enable_partitioning and partition_columns:
+                            writer_bad = writer_bad.partitionBy(*[col.lower() for col in partition_columns])
+                        
                         if output_format == "json":
                             writer_bad.json(bad_target)
                         elif output_format == "parquet":
@@ -272,6 +319,11 @@ try:
                 if report_key:
                     quality_reports.append(report_key)
             
+            # Add partition columns if enabled
+            if enable_partitioning:
+                df_clean = add_partition_columns(df_clean, partition_columns)
+                print(f"Partitioning enabled: {', '.join(partition_columns)}")
+            
             # Write clean/good data
             target = f"s3://{output_bucket}/{output_path}/{table_name}/"
             final_count = df_clean.count()
@@ -279,7 +331,14 @@ try:
             print(f"\nWriting {output_format.upper()} to: {target}")
             print(f"Records to write: {final_count}")
             
-            writer = df_clean.write.mode("overwrite")
+            # Use append mode when partitioning to preserve historical data
+            write_mode = "append" if enable_partitioning else "overwrite"
+            writer = df_clean.write.mode(write_mode)
+            
+            # Add partitionBy when partitioning is enabled
+            if enable_partitioning and partition_columns:
+                writer = writer.partitionBy(*[col.lower() for col in partition_columns])
+                print(f"Partitioning by: {', '.join([col.lower() for col in partition_columns])}")
             
             if output_format == "json":
                 writer.json(target)
@@ -294,9 +353,15 @@ try:
             processed_count += 1
             
         except Exception as e:
+            error_traceback = traceback.format_exc()
             error_msg = f"ERROR: Failed to process table '{table_name}': {str(e)}"
             print(error_msg)
-            failed_tables.append({"table": table_name, "error": str(e)})
+            print(f"Traceback:\n{error_traceback}")
+            failed_tables.append({
+                "table": table_name,
+                "error": str(e),
+                "traceback": error_traceback
+            })
             continue
 
     # Summary
@@ -314,9 +379,15 @@ try:
     
     if failed_tables:
         print("\nFailed tables:")
+        error_details = []
         for failed in failed_tables:
-            print(f"  - {failed['table']}: {failed['error']}")
-        raise Exception(f"Job completed with {len(failed_tables)} table(s) failed. Check logs for details.")
+            error_info = f"  - {failed['table']}: {failed['error']}"
+            print(error_info)
+            error_details.append(error_info)
+        
+        # Include error details in exception message for better visibility
+        error_summary = f"Job completed with {len(failed_tables)} table(s) failed:\n" + "\n".join(error_details)
+        raise Exception(error_summary)
     
     if processed_count == 0 and len(matching_tables) > 0:
         print("WARNING: No tables were successfully processed.")
@@ -330,5 +401,7 @@ except Exception as e:
     raise
 
 finally:
+    # Always commit job bookmark - safe even if bookmarks are disabled
+    # AWS Glue handles bookmark state automatically when enabled
     job.commit()
     print("Job bookmark committed.")

@@ -46,5 +46,7 @@ variable "glue_job_config" {
     bad_data_path          = string
     filter_bad_data        = bool
     job_bookmark_option    = string
+    enable_partitioning    = bool
+    partition_columns      = string
   })
 }

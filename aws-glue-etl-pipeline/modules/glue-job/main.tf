@@ -23,7 +23,6 @@ resource "aws_glue_job" "csv_to_json" {
   }
 
   default_arguments = {
-    "--job-bookmark-option"      = var.glue_job_config.job_bookmark_option
     "--enable-spark-ui"          = "true"
     "--spark-event-logs-path"    = "s3://${var.processed_data_bucket_name}/spark-logs/"
     "--enable-glue-datacatalog"  = "true"
@@ -38,6 +37,8 @@ resource "aws_glue_job" "csv_to_json" {
     "--quality_report_path"     = var.glue_job_config.quality_report_path
     "--bad_data_path"            = var.glue_job_config.bad_data_path
     "--filter_bad_data"          = tostring(var.glue_job_config.filter_bad_data)
+    "--enable_partitioning"      = tostring(var.glue_job_config.enable_partitioning)
+    "--partition_columns"        = var.glue_job_config.partition_columns
   }
 
   worker_type       = var.glue_job_config.worker_type
