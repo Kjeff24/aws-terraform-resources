@@ -14,7 +14,7 @@ variable "region" {
 variable "project_name" {
   description = "Project name used for resource naming and tagging"
   type        = string
-  default     = "aws-glue-csv-to-json-etl"
+  default     = "glue-csv-to-json"
 
   validation {
     condition = (
@@ -42,10 +42,19 @@ variable "enable_versioning" {
   default     = true
 }
 
-variable "enable_lake_formation" {
-  description = "Enable Lake Formation integration for Glue crawler and automatic configuration"
-  type        = bool
-  default     = false
+############################
+# 🏞️ AWS Lake Formation Configuration (object)
+############################
+variable "lake_formation" {
+  description = "Configuration for AWS Lake Formation integration"
+  type = object({
+    enable               = bool
+    database_permissions = list(string)
+  })
+  default = {
+    enable               = true
+    database_permissions = ["CREATE_TABLE"]
+  }
 }
 
 ############################
@@ -57,6 +66,7 @@ variable "glue_job" {
     script_path          = string
     input_table_prefix   = string
     output_path          = string
+    output_format        = string
     worker_type          = string
     number_of_workers    = number
     version              = string
@@ -64,11 +74,23 @@ variable "glue_job" {
     max_retries          = number
     max_concurrent_runs  = number
     log_retention_days   = number
+    enable_quality_checks = bool
+    quality_report_path   = string
+    bad_data_path         = string
+    filter_bad_data       = bool
+    job_bookmark_option   = string
+    enable_partitioning   = bool
+    partition_columns     = string
+    enable_job_insights   = bool
+    enable_spark_ui       = bool
+    job_language          = string
+    python_version        = string
   })
   default = {
-    script_path          = "scripts/csv-to-json.py"
+    script_path          = "scripts/glue-etl-job.py"
     input_table_prefix   = "raw_"
     output_path          = "output/"
+    output_format        = "json"
     worker_type          = "G.1X"
     number_of_workers    = 2
     version              = "5.0"
@@ -76,6 +98,33 @@ variable "glue_job" {
     max_retries          = 1
     max_concurrent_runs  = 1
     log_retention_days   = 1
+    enable_quality_checks = true
+    quality_report_path   = "quality-reports/"
+    bad_data_path         = "bad-data/"
+    filter_bad_data       = true
+    job_bookmark_option   = "job-bookmark-disable"
+    enable_partitioning   = true
+    partition_columns     = "year,month,day"
+    enable_job_insights   = true
+    enable_spark_ui       = true
+    job_language          = "python"
+    python_version        = "3"
+  }
+  validation {
+    condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))
+    error_message = "output_format must be one of: json, parquet, csv, orc (case-insensitive)."
+  }
+  validation {
+    condition     = contains(["job-bookmark-enable", "job-bookmark-disable", "job-bookmark-pause"], var.glue_job.job_bookmark_option)
+    error_message = "job_bookmark_option must be one of: job-bookmark-enable, job-bookmark-disable, job-bookmark-pause."
+  }
+  validation {
+    condition     = contains(["python", "scala"], lower(var.glue_job.job_language))
+    error_message = "job_language must be one of: python, scala (case-insensitive)."
+  }
+  validation {
+    condition     = var.glue_job.job_language != "python" || contains(["2", "3"], var.glue_job.python_version)
+    error_message = "python_version must be '2' or '3' when job_language is 'python'. Note: Python 2 is deprecated."
   }
 }
 

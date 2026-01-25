@@ -73,14 +73,15 @@ resource "aws_s3_object" "site_files" {
   )
 }
 
-# Upload Glue ETL scripts to processed bucket under 'scripts/'
+# Upload Glue ETL scripts (Python and Scala) to processed bucket under 'scripts/'
 resource "aws_s3_object" "glue_scripts" {
-  for_each = fileset("${path.root}/scripts", "**/*.py")
+  for_each = fileset("${path.root}/scripts", "**/*.{py,scala}")
 
   bucket = aws_s3_bucket.processed_data_bucket.id
   key    = "scripts/${each.value}"
   source = "${path.root}/scripts/${each.value}"
   etag   = filemd5("${path.root}/scripts/${each.value}")
 
-  content_type = "text/x-python"
+  # Set content type based on file extension
+  content_type = endswith(each.value, ".py") ? "text/x-python" : "text/x-scala"
 }

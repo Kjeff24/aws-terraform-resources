@@ -26,17 +26,17 @@ output "processed_data_bucket_arn" {
 ############################
 output "glue_crawler_name" {
   description = "Name of the Glue crawler"
-  value       = module.glue_crawler.crawler_name
+  value       = var.lake_formation.enable ? module.glue_crawler[0].crawler_name : module.glue_crawler_no_lf[0].crawler_name
 }
 
 output "glue_crawler_arn" {
   description = "ARN of the Glue crawler"
-  value       = module.glue_crawler.crawler_arn
+  value       = var.lake_formation.enable ? module.glue_crawler[0].crawler_arn : module.glue_crawler_no_lf[0].crawler_arn
 }
 
 output "glue_catalog_database_name" {
   description = "Name of the Glue Catalog database"
-  value       = module.glue_crawler.catalog_database_name
+  value       = module.glue_database.database_name
 }
 
 ############################
