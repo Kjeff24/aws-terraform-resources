@@ -50,5 +50,7 @@ variable "glue_job_config" {
     partition_columns      = string
     enable_job_insights    = bool
     enable_spark_ui        = bool
+    job_language           = string
+    python_version         = string
   })
 }

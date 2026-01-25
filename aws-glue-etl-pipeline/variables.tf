@@ -83,6 +83,8 @@ variable "glue_job" {
     partition_columns     = string
     enable_job_insights   = bool
     enable_spark_ui       = bool
+    job_language          = string
+    python_version        = string
   })
   default = {
     script_path          = "scripts/glue-etl-job.py"
@@ -105,6 +107,8 @@ variable "glue_job" {
     partition_columns     = "year,month,day"
     enable_job_insights   = true
     enable_spark_ui       = true
+    job_language          = "python"
+    python_version        = "3"
   }
   validation {
     condition     = contains(["json", "parquet", "csv", "orc"], lower(var.glue_job.output_format))
@@ -113,6 +117,14 @@ variable "glue_job" {
   validation {
     condition     = contains(["job-bookmark-enable", "job-bookmark-disable", "job-bookmark-pause"], var.glue_job.job_bookmark_option)
     error_message = "job_bookmark_option must be one of: job-bookmark-enable, job-bookmark-disable, job-bookmark-pause."
+  }
+  validation {
+    condition     = contains(["python", "scala"], lower(var.glue_job.job_language))
+    error_message = "job_language must be one of: python, scala (case-insensitive)."
+  }
+  validation {
+    condition     = var.glue_job.job_language != "python" || contains(["2", "3"], var.glue_job.python_version)
+    error_message = "python_version must be '2' or '3' when job_language is 'python'. Note: Python 2 is deprecated."
   }
 }
 

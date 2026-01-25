@@ -19,7 +19,8 @@ resource "aws_glue_job" "csv_to_json" {
   command {
     name            = "glueetl"
     script_location = "s3://${var.scripts_bucket_name}/${var.glue_job_config.script_path}"
-    python_version  = "3"
+    # Only set python_version for Python, not for Scala
+    python_version  = var.glue_job_config.job_language == "python" ? var.glue_job_config.python_version : null
   }
 
   default_arguments = {
@@ -28,7 +29,7 @@ resource "aws_glue_job" "csv_to_json" {
     "--spark-event-logs-path"    = "s3://${var.processed_data_bucket_name}/spark-logs/"
     "--enable-glue-datacatalog"  = "true"
     "--TempDir"                  = "s3://${var.processed_data_bucket_name}/temp/"
-    "--job-language"             = "python"
+    "--job-language"             = var.glue_job_config.job_language
     "--input_database"           = var.input_database
     "--input_table_prefix"       = var.glue_job_config.input_table_prefix
     "--output_bucket"            = var.processed_data_bucket_name
