@@ -1,0 +1,188 @@
+############################
+# 🌐 General Configuration
+############################
+
+# AWS region for deployment
+region = "eu-west-1"
+
+# Project name used for resource naming (3-20 characters, alphanumeric and hyphens only)
+project_name = "glue-csv-to-json"
+
+# Common tags to apply to all resources
+tags = {
+  Environment = "dev"
+  Project     = "data-pipeline"
+  Team        = "data-engineering"
+  ManagedBy   = "terraform"
+}
+
+############################
+# 📦 S3 Configuration
+############################
+
+# Enable S3 bucket versioning
+enable_versioning = true
+
+############################
+# 🔧 Glue Job Configuration
+############################
+
+glue_job = {
+  # Path to Glue ETL script in S3 (relative to scripts/ directory)
+  script_path = "scripts/glue-etl-job.py"
+
+  # Prefix for input tables discovered by crawler
+  input_table_prefix = "raw_"
+
+  # S3 path for processed output data
+  output_path = "output/"
+
+  # Output format: json, parquet, csv, orc
+  output_format = "json"
+
+  # Glue worker type: G.1X, G.2X, G.4X, G.8X, Standard, Z.2X
+  worker_type = "G.1X"
+
+  # Number of Glue workers
+  number_of_workers = 2
+
+  # AWS Glue version
+  version = "5.0"
+
+  # Job timeout in minutes (default: 2880 = 48 hours)
+  job_timeout = 2880
+
+  # Maximum number of job retries on failure
+  max_retries = 1
+
+  # Maximum concurrent job runs
+  max_concurrent_runs = 1
+
+  # CloudWatch log retention in days
+  log_retention_days = 7
+
+  # Enable data quality checks
+  enable_quality_checks = true
+
+  # S3 path for quality reports
+  quality_report_path = "quality-reports/"
+
+  # S3 path for bad/filtered data
+  bad_data_path = "bad-data/"
+
+  # Filter and store bad data separately
+  filter_bad_data = true
+
+  # Job bookmark option: job-bookmark-enable, job-bookmark-disable, job-bookmark-pause
+  job_bookmark_option = "job-bookmark-disable"
+
+  # Enable time-based partitioning (year/month/day)
+  enable_partitioning = true
+
+  # Partition columns: year, month, day, hour, minute (comma-separated)
+  partition_columns = "year,month,day"
+
+  # Enable AWS Glue job insights
+  enable_job_insights = true
+
+  # Enable Spark UI for debugging
+  enable_spark_ui = true
+
+  # Script language: python or scala
+  job_language = "python"
+
+  # Python version: 2 or 3 (only used when job_language is python)
+  # Note: Python 2 is deprecated
+  python_version = "3"
+}
+
+############################
+# 🗓️ Glue Crawler Schedule
+############################
+
+# Schedule expression for the Glue crawler
+# Examples:
+#   null                    - Manual runs only
+#   "cron(0 0 * * ? *)"     - Daily at midnight UTC
+#   "cron(0 0 * * MON *)"    - Weekly on Monday at midnight UTC
+#   "rate(1 hour)"          - Every hour
+#   "rate(12 hours)"        - Every 12 hours
+crawler_schedule = null
+
+############################
+# 🔐 Lake Formation Configuration
+############################
+
+# Enable AWS Lake Formation integration for fine-grained access control
+lake_formation = {
+  # Enable Lake Formation
+  enable = false
+
+  # Database permissions to grant to Glue service role
+  # Options: CREATE_TABLE, ALTER_TABLE, DROP_TABLE, SELECT, INSERT, DELETE, etc.
+  database_permissions = ["CREATE_TABLE"]
+}
+
+############################
+# 📝 Example: Production Configuration
+############################
+
+# Uncomment and modify for production use:
+#
+# region       = "us-east-1"
+# project_name = "prod-glue-etl"
+#
+# enable_versioning = true
+#
+# glue_job = {
+#   script_path          = "scripts/glue-etl-job.py"
+#   input_table_prefix   = "raw_"
+#   output_path          = "output/"
+#   output_format        = "parquet"  # Better for analytics
+#   worker_type          = "G.2X"      # More memory
+#   number_of_workers    = 10
+#   version              = "5.0"
+#   job_timeout          = 2880
+#   max_retries          = 3
+#   max_concurrent_runs  = 1
+#   log_retention_days   = 30
+#   enable_quality_checks = true
+#   quality_report_path   = "quality-reports/"
+#   bad_data_path         = "bad-data/"
+#   filter_bad_data       = true
+#   job_bookmark_option   = "job-bookmark-enable"
+#   enable_partitioning   = true
+#   partition_columns     = "year,month,day"
+#   enable_job_insights   = true
+#   enable_spark_ui       = true
+#   job_language          = "python"
+#   python_version        = "3"
+# }
+#
+# crawler_schedule = "cron(0 2 * * ? *)"  # Daily at 2 AM UTC
+#
+# lake_formation = {
+#   enable               = true
+#   database_permissions = ["CREATE_TABLE", "ALTER_TABLE", "DROP_TABLE"]
+# }
+#
+# tags = {
+#   Environment = "production"
+#   Project     = "data-pipeline"
+#   Team        = "data-engineering"
+#   ManagedBy   = "terraform"
+#   CostCenter  = "engineering"
+# }
+
+############################
+# 📝 Example: Scala Configuration
+############################
+
+# For Scala scripts, use:
+#
+# glue_job = {
+#   script_path   = "scripts/glue-etl-job.scala"
+#   job_language  = "scala"
+#   python_version = "3"  # Ignored for Scala, but required in object
+#   # ... other settings
+# }
