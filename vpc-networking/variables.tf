@@ -42,12 +42,14 @@ variable "tags" {
 variable "networking" {
   description = "Networking configuration for the VPC module"
   type = object({
-    vpc_cidr             : string
-    public_subnet_count  : number
-    private_subnet_count : number
-    subnet_prefix_length : number
-    enable_dns_hostnames : bool
-    enable_dns_support   : bool
+    vpc_cidr                : string
+    public_subnet_count     : number
+    private_subnet_count    : number
+    subnet_prefix_length   : number
+    enable_dns_hostnames    : bool
+    enable_dns_support      : bool
+    public_subnet_index_start  : optional(number, 0)
+    private_subnet_index_start : optional(number)
   })
   default = {
     vpc_cidr             = "10.0.0.0/16"
@@ -89,5 +91,29 @@ variable "networking" {
   validation {
     condition     = var.networking.enable_dns_support || (!var.networking.enable_dns_hostnames)
     error_message = "enable_dns_hostnames requires enable_dns_support to be true."
+  }
+
+  validation {
+    condition = (
+      coalesce(var.networking.public_subnet_index_start, 0) >= 0 &&
+      coalesce(var.networking.private_subnet_index_start, var.networking.public_subnet_count) >= 0
+    )
+    error_message = "Subnet index starts must be non-negative."
+  }
+
+  validation {
+    condition = (
+      coalesce(var.networking.private_subnet_index_start, coalesce(var.networking.public_subnet_index_start, 0) + var.networking.public_subnet_count) >= 
+      coalesce(var.networking.public_subnet_index_start, 0) + var.networking.public_subnet_count
+    )
+    error_message = "Private subnet index start must be after the public subnet range to avoid overlap."
+  }
+
+  validation {
+    condition = (
+      coalesce(var.networking.private_subnet_index_start, coalesce(var.networking.public_subnet_index_start, 0) + var.networking.public_subnet_count) + var.networking.private_subnet_count <=
+      pow(2, var.networking.subnet_prefix_length - tonumber(element(split("/", var.networking.vpc_cidr), 1)))
+    )
+    error_message = "Private subnet range exceeds available subnet capacity in the VPC."
   }
 }

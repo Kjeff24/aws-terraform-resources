@@ -2,7 +2,7 @@ terraform {
 
   backend "s3" {
     bucket       = "account-vending-terraform-state"
-    key          = "aws-glue-csv-to-json-etl/terraform.tfstate"
+    key          = "learn-guide/aws-glue-etl-pipeline.tfstate"
     region       = "eu-west-1"
     use_lockfile = true
   }
