@@ -1,42 +1,200 @@
-AWS Terraform Projects
-======================
+# AWS Terraform Projects
 
-Collection of Terraform examples for common AWS patterns. Each folder is a self-contained project with its own variables and backends. The list below includes current and planned projects.
+A comprehensive collection of Terraform modules and examples for common AWS infrastructure patterns. Each project is self-contained with its own variables, backends, and documentation.
 
-Project roadmap
----------------
+## 📋 Table of Contents
 
-🟢 Beginner-Level Projects
-1. 📁 s3-static-website — Host a static website using S3, enable static website hosting, add CloudFront as CDN, and configure Route 53 for a custom domain.
-2. 📁 ec2-instance — Provision an EC2 instance with a key pair and security group allowing SSH and HTTP access, and output the instance’s public IP.
-3. 📁 vpc-networking — Create a VPC with public and private subnets, Internet Gateway, NAT Gateway, and route tables for network isolation.
-4. 📁 iam-roles-users — Automate the creation of IAM users, roles, groups, and policies with least privilege principles.
-5. 📁 rds-mysql — Deploy a secure MySQL RDS instance in a private subnet with backup and maintenance configurations.
+- [Completed Projects](#completed-projects)
+- [Planned Projects](#planned-projects)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
 
-🟡 Intermediate-Level Projects
-1. 📁 3tier-architecture — Build a 3-tier web application setup: ALB (public), EC2 app servers (private), and RDS database (private) with proper networking and security.
-2. 📁 serverless-api — Deploy a fully managed REST API using API Gateway, AWS Lambda, and DynamoDB, with environment variables stored in SSM Parameter Store.
-3. 📁 ecs-fargate-cluster — Provision an ECS cluster running containerized applications on Fargate with CloudWatch logging and load balancing.
-4. 📁 cloudwatch-alerts — Set up CloudWatch alarms to monitor EC2, RDS, or Lambda metrics and send notifications via SNS topics.
-5. 📁 ebs-snapshot-automation — Automate EBS snapshot creation and cleanup using EventBridge, Lambda, and SNS notifications.
-6. 📁 aws-glue-csv-to-json-etl — End-to-end AWS Glue ETL: create a Glue crawler, build a Glue ETL script, set up an automatic workflow, and convert CSV files in S3 to JSON outputs.
+## ✅ Completed Projects
 
-🔵 Advanced-Level Projects
-1. 📁 multi-region-dr — Implement a disaster recovery setup by replicating DynamoDB tables, S3 buckets, and Lambda functions across multiple AWS regions with Route 53 failover.
-2. 📁 serverless-ecommerce — Design a serverless backend for an e-commerce app using API Gateway, Lambda, DynamoDB, SQS, and SNS for event-driven workflows.
-3. 📁 eks-cluster — Create an Elastic Kubernetes Service (EKS) cluster with worker nodes, autoscaling groups, and IAM roles for service accounts.
-4. 📁 cicd-pipeline — Build a CI/CD pipeline using CodePipeline and CodeBuild to automate testing and deployment from GitHub.
-5. 📁 cloudfront-alb-s3 — Host a frontend (React or Angular) on S3 and CloudFront with SSL, while routing backend traffic through an Application Load Balancer.
-6. 📁 centralized-logging — Aggregate logs from EC2, Lambda, and other services into CloudWatch Logs, export to S3, and analyze with Athena.
-7. 📁 vpc-peering — Connect multiple VPCs or AWS accounts securely using VPC Peering or Transit Gateway, and configure routing tables for communication.
+### 🟢 Beginner-Level Projects
 
-How to use
-----------
-1. Install Terraform and configure AWS credentials (`aws configure` or environment variables).
-2. Choose a project folder, then run: `terraform init`, `terraform plan`, `terraform apply`.
-3. To clean up, run `terraform destroy` in the same folder.
+#### 1. [s3-static-website](./s3-static-website/)
+Host a static website using S3 with CloudFront CDN distribution. Includes S3 bucket configuration, CloudFront distribution, and optional logging.
 
-Notes
------
-- Each project keeps its own `backend.tf`; adjust state storage to match your S3 bucket/DynamoDB settings.
-- Review the `variables*.tf` files in each project for required inputs before applying.
+**Features:**
+- S3 bucket with static website hosting
+- CloudFront distribution for global CDN
+- Optional CloudFront access logging
+- Configurable price classes and caching
+
+#### 2. [ec2-instance](./ec2-instance/)
+Provision a secure EC2 instance with SSH key pair generation, security groups, and user data support.
+
+**Features:**
+- Automatic SSH key pair generation
+- Configurable security groups
+- User data script support
+- Input validation for instance configuration
+
+#### 3. [vpc-networking](./vpc-networking/)
+Create a production-ready VPC with public and private subnets, Internet Gateway, NAT Gateway, and route tables.
+
+**Features:**
+- Multi-AZ public and private subnets
+- Internet Gateway for public access
+- NAT Gateway for private subnet internet access
+- Configurable CIDR blocks and subnet counts
+
+#### 4. [iam-roles-users](./iam-roles-users/)
+Automate IAM users, groups, and roles creation with least privilege principles and role assumption support.
+
+**Features:**
+- IAM users and groups with inline policies
+- IAM roles with configurable trust policies
+- Cross-account role assumption support
+- Least privilege by default
+
+#### 5. [rds-mysql](./rds-mysql/)
+Deploy a secure MySQL RDS instance in private subnets with VPC, security groups, and backup configurations.
+
+**Features:**
+- RDS MySQL in private subnets
+- Automatic password generation
+- Backup and maintenance window configuration
+- Encryption at rest with optional KMS
+
+### 🟡 Intermediate-Level Projects
+
+#### 6. [3tier-architecture](./3tier-architecture/)
+Build a complete 3-tier web application architecture with ALB, EC2 application servers, and RDS database.
+
+**Features:**
+- Application Load Balancer (ALB)
+- EC2 instances in private subnets
+- RDS database in isolated private subnets
+- Security groups with least privilege
+- Modular architecture for easy customization
+
+#### 7. [aws-glue-etl-pipeline](./aws-glue-etl-pipeline/)
+End-to-end AWS Glue ETL pipeline with crawler, ETL jobs, workflows, and optional Lake Formation integration.
+
+**Features:**
+- Glue Crawler for schema discovery
+- Glue ETL jobs with PySpark/Spark
+- Automated workflows (Crawler → Job)
+- Data quality checks and reporting
+- Time-based partitioning
+- Multi-format support (CSV, JSON, Parquet, ORC)
+- Optional Lake Formation integration
+
+## 🚧 Planned Projects
+
+### Intermediate-Level
+
+- **serverless-api** — Deploy a fully managed REST API using API Gateway, AWS Lambda, and DynamoDB
+- **ecs-fargate-cluster** — Provision an ECS cluster running containerized applications on Fargate
+- **cloudwatch-alerts** — Set up CloudWatch alarms to monitor EC2, RDS, or Lambda metrics
+- **ebs-snapshot-automation** — Automate EBS snapshot creation and cleanup using EventBridge and Lambda
+
+### Advanced-Level
+
+- **multi-region-dr** — Implement disaster recovery with multi-region replication
+- **serverless-ecommerce** — Design a serverless backend for e-commerce using API Gateway, Lambda, DynamoDB, SQS, and SNS
+- **eks-cluster** — Create an Elastic Kubernetes Service (EKS) cluster with worker nodes and autoscaling
+- **cicd-pipeline** — Build a CI/CD pipeline using CodePipeline and CodeBuild
+- **cloudfront-alb-s3** — Host frontend on S3/CloudFront with backend through ALB
+- **centralized-logging** — Aggregate logs from multiple services into CloudWatch and S3
+- **vpc-peering** — Connect multiple VPCs or AWS accounts using VPC Peering or Transit Gateway
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Terraform** >= 1.0 (1.5+ recommended)
+- **AWS CLI** configured with appropriate credentials
+- **AWS Account** with permissions to create resources
+
+### Quick Start
+
+1. **Choose a project** from the [Completed Projects](#completed-projects) list
+2. **Navigate to the project directory**:
+   ```bash
+   cd <project-name>
+   ```
+3. **Configure the backend** (if using remote state):
+   - Edit `backend.tf` to point to your S3 bucket
+   - Or use local state: `terraform init -backend=false`
+4. **Review and set variables**:
+   - Check `variables.tf` for required inputs
+   - Create `terraform.tfvars` or use `-var` flags
+   - Some projects include `terraform.tfvars.example` as a template
+5. **Initialize and deploy**:
+   ```bash
+   terraform init
+   terraform validate
+   terraform plan
+   terraform apply
+   ```
+6. **Clean up** when done:
+   ```bash
+   terraform destroy
+   ```
+
+### Configuration
+
+Each project maintains its own:
+- `backend.tf` — Terraform state backend configuration (S3 by default)
+- `variables.tf` — Input variables with descriptions and defaults
+- `outputs.tf` — Output values for created resources
+- `README.md` — Project-specific documentation
+
+**Important Notes:**
+- Review `variables*.tf` files before applying to understand required inputs
+- Adjust `backend.tf` to match your S3 bucket/DynamoDB settings for remote state
+- Some projects require existing resources (e.g., S3 bucket for state storage)
+- Check individual project READMEs for specific prerequisites and examples
+
+## 📁 Project Structure
+
+```
+aws-terraform-projects/
+├── README.md                    # This file
+├── .gitignore                   # Git ignore rules
+│
+├── s3-static-website/          # ✅ Static website with CloudFront
+├── ec2-instance/               # ✅ EC2 instance provisioning
+├── vpc-networking/             # ✅ VPC with subnets and gateways
+├── iam-roles-users/            # ✅ IAM automation
+├── rds-mysql/                  # ✅ RDS MySQL deployment
+├── 3tier-architecture/        # ✅ 3-tier web app architecture
+└── aws-glue-etl-pipeline/     # ✅ Glue ETL pipeline
+```
+
+Each project follows a modular structure:
+- `main.tf` — Root module configuration
+- `modules/` — Reusable Terraform modules
+- `backend.tf` — State backend configuration
+- `variables.tf` — Input variables
+- `outputs.tf` — Output values
+- `README.md` — Project documentation
+
+## 🤝 Contributing
+
+Contributions are welcome! When adding new projects:
+
+1. Follow the existing project structure and naming conventions
+2. Include comprehensive `README.md` documentation
+3. Add input validation where appropriate
+4. Use modular design with reusable modules
+5. Include example `terraform.tfvars.example` files
+6. Document prerequisites and common use cases
+
+## 📝 License
+
+This project is provided as-is for educational and production use.
+
+## 🔗 Resources
+
+- [Terraform AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+- [Terraform Best Practices](https://www.terraform.io/docs/cloud/guides/recommended-practices/index.html)
+
+---
+
+**Note:** These modules create AWS resources that may incur costs. Always review and understand the resources being created before applying. Use `terraform plan` to preview changes.
