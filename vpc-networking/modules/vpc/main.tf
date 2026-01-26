@@ -33,11 +33,11 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  azs              = data.aws_availability_zones.available.names
-  vpc_prefix_len   = tonumber(element(split("/", var.networking.vpc_cidr), 1))
-  subnet_newbits   = max(0, var.networking.subnet_prefix_length - local.vpc_prefix_len)
-  public_offset    = 0
-  private_offset   = var.networking.public_subnet_count
+  azs                        = data.aws_availability_zones.available.names
+  vpc_prefix_len             = tonumber(element(split("/", var.networking.vpc_cidr), 1))
+  subnet_newbits             = max(0, var.networking.subnet_prefix_length - local.vpc_prefix_len)
+  public_subnet_index_start  = coalesce(var.networking.public_subnet_index_start, 0)
+  private_subnet_index_start = coalesce(var.networking.private_subnet_index_start, local.public_subnet_index_start + var.networking.public_subnet_count)
 }
 
 # Create VPC
@@ -64,7 +64,7 @@ resource "aws_internet_gateway" "main" {
 resource "aws_subnet" "public" {
   count             = var.networking.public_subnet_count
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.networking.vpc_cidr, local.subnet_newbits, count.index + local.public_offset)
+  cidr_block        = cidrsubnet(var.networking.vpc_cidr, local.subnet_newbits, local.public_subnet_index_start + count.index)
   availability_zone = local.azs[count.index % length(local.azs)]
 
   map_public_ip_on_launch = true
@@ -80,7 +80,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count             = var.networking.private_subnet_count
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.networking.vpc_cidr, local.subnet_newbits, count.index + local.private_offset)
+  cidr_block        = cidrsubnet(var.networking.vpc_cidr, local.subnet_newbits, local.private_subnet_index_start + count.index)
   availability_zone = local.azs[count.index % length(local.azs)]
 
   tags = {
