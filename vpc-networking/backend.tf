@@ -1,8 +1,8 @@
 terraform {
 
   backend "s3" {
-    bucket       = "aws-terraform-projects-state-bucket"
-    key          = "vpc-networking/terraform.tfstate"
+    bucket       = "account-vending-terraform-state"
+    key          = "learn-guide/vpc-networking.tfstate"
     region       = "eu-west-1"
     use_lockfile = true
   }
