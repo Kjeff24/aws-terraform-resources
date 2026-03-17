@@ -1,0 +1,143 @@
+# AWS Athena Terraform Variables Example
+# Copy this file to terraform.tfvars and customize for your environment
+
+############################
+# General Configuration
+############################
+project_name = "athena-analytics"
+region       = "eu-west-1"
+
+tags = {
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+  Project     = "AWS Athena Analytics"
+  Team        = "Data Engineering"
+}
+
+############################
+# S3 Configuration
+############################
+enable_versioning = true
+enable_encryption = true
+# kms_key_id = "arn:aws:kms:eu-west-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+
+############################
+# Glue ETL Configuration
+############################
+enable_glue_etl = true
+
+glue_crawler = {
+  table_prefix = "raw_"
+  schedule     = null  # Use null for manual runs, or cron expression like "cron(0 2 * * ? *)"
+}
+
+glue_job_config = {
+  script_path          = "scripts/glue-etl-job.py"
+  input_table_prefix   = "raw_"
+  output_path          = "processed/"
+  output_format        = "parquet"  # Parquet recommended for Athena (better performance, lower cost)
+  worker_type          = "G.1X"
+  number_of_workers    = 2
+  version              = "5.0"
+  job_timeout          = 2880
+  max_retries          = 1
+  max_concurrent_runs  = 1
+  enable_quality_checks = true
+  quality_report_path   = "quality-reports/"
+  bad_data_path         = "bad-data/"
+  filter_bad_data       = true
+  job_bookmark_option   = "job-bookmark-disable"
+  enable_partitioning   = true
+  partition_columns     = "year,month,day"
+  enable_job_insights   = true
+  enable_spark_ui       = true
+  job_language          = "python"
+  python_version        = "3"
+  log_retention_days    = 7
+}
+
+############################
+# Glue Data Catalog Configuration
+############################
+glue_database = {
+  name        = "analytics_db"
+  description = "Analytics database for Athena queries (processed data)"
+}
+
+# Example: Create tables via Terraform
+# Uncomment and customize as needed
+# glue_tables = {
+#   "customers" = {
+#     description = "Customer data table"
+#     location    = "s3://athena-analytics-data-xxxxx/customers/"
+#     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+#     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+#     serde_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+#     columns = [
+#       { name = "customer_id", type = "bigint" },
+#       { name = "name", type = "string" },
+#       { name = "email", type = "string" },
+#       { name = "created_at", type = "timestamp" },
+#       { name = "status", type = "string" }
+#     ]
+#   }
+#   "sales" = {
+#     description = "Sales transaction data"
+#     location    = "s3://athena-analytics-data-xxxxx/sales/"
+#     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+#     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+#     serde_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+#     columns = [
+#       { name = "transaction_id", type = "bigint" },
+#       { name = "customer_id", type = "bigint" },
+#       { name = "product_id", type = "bigint" },
+#       { name = "amount", type = "double" },
+#       { name = "transaction_date", type = "date" }
+#     ]
+#     partition_keys = [
+#       { name = "year", type = "int" },
+#       { name = "month", type = "int" }
+#     ]
+#   }
+# }
+
+############################
+# Athena Workgroup Configuration
+############################
+athena_workgroups = {
+  primary = {
+    description              = "Primary Athena workgroup for analytics"
+    enforce_workgroup_config = false
+    publish_cloudwatch_metrics = true
+    result_configuration = {
+      output_location = null  # Uses default: s3://query-results-bucket/primary/
+      encryption_configuration = {
+        encryption_option = "SSE_S3"
+        kms_key           = null
+      }
+    }
+    state = "ENABLED"
+  }
+  # Example: Additional workgroup for specific team
+  # data_team = {
+  #   description              = "Workgroup for data team"
+  #   enforce_workgroup_config = true
+  #   publish_cloudwatch_metrics = true
+  #   result_configuration = {
+  #     output_location = "s3://athena-analytics-query-results-xxxxx/data-team/"
+  #     encryption_configuration = {
+  #       encryption_option = "SSE_KMS"
+  #       kms_key           = "arn:aws:kms:eu-west-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+  #     }
+  #   }
+  #   engine_version = {
+  #     selected_engine_version = "Athena engine version 3"
+  #   }
+  #   state = "ENABLED"
+  # }
+}
+
+############################
+# IAM Configuration
+############################
+# Note: Athena user role is automatically created with name: ${project_name}-athena-user-role
