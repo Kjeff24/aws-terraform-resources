@@ -83,6 +83,18 @@ End-to-end AWS Glue ETL pipeline with crawler, ETL jobs, workflows, and optional
 - Multi-format support (CSV, JSON, Parquet, ORC)
 - Optional Lake Formation integration
 
+#### 8. [aws-athena](./aws-athena/)
+Set up AWS Athena for interactive SQL queries on data stored in S3 with Glue Data Catalog integration.
+
+**Features:**
+- S3 buckets for data storage and query results
+- Glue Data Catalog database and tables
+- Athena workgroups with encryption and result configuration
+- IAM roles and policies for secure access
+- Support for partitioned tables
+- Multiple workgroup configurations
+- Example queries and sample data
+
 ## 🚧 Planned Projects
 
 ### Intermediate-Level
@@ -163,7 +175,8 @@ aws-terraform-projects/
 ├── iam-roles-users/            # ✅ IAM automation
 ├── rds-mysql/                  # ✅ RDS MySQL deployment
 ├── 3tier-architecture/        # ✅ 3-tier web app architecture
-└── aws-glue-etl-pipeline/     # ✅ Glue ETL pipeline
+├── aws-glue-etl-pipeline/     # ✅ Glue ETL pipeline
+└── aws-athena/                # ✅ Athena analytics
 ```
 
 Each project follows a modular structure:
