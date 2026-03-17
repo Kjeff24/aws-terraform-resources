@@ -61,4 +61,4 @@ node_modules/
 *.pem
 *.pub
 
-*.my-local.md
+*.local.*
