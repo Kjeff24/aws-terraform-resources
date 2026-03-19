@@ -1,0 +1,3 @@
+# Place your raw data files here (CSV, JSON, TXT, etc.)
+# Files in this directory will be automatically uploaded to the raw data S3 bucket
+# The Glue Crawler will discover and catalog these files
