@@ -231,3 +231,32 @@ variable "idp_apple" {
     error_message = "When idp_apple.enabled is true, client_id, team_id, key_id, and private_key must be provided."
   }
 }
+
+# Generic OIDC providers (zero or more)
+variable "idp_oidc_providers" {
+  description = "List of OIDC IdPs to create"
+  type = list(object({
+    name                   = string
+    issuer                 = string
+    client_id              = string
+    client_secret          = string
+    authorize_scopes       = optional(string, "openid profile email")
+    attributes_request_method = optional(string, "GET")
+    authorize_url          = optional(string)
+    token_url              = optional(string)
+    attributes_url         = optional(string)
+    jwks_uri               = optional(string)
+    attribute_mapping      = optional(map(string))
+  }))
+  default = []
+  validation {
+    condition     = length(distinct([for p in var.idp_oidc_providers : p.name])) == length(var.idp_oidc_providers)
+    error_message = "Each OIDC provider must have a unique 'name'."
+  }
+  validation {
+    condition = alltrue([
+      for p in var.idp_oidc_providers : (length(p.issuer) > 0 && length(p.client_id) > 0 && length(p.client_secret) > 0)
+    ])
+    error_message = "Each OIDC provider must include non-empty issuer, client_id, and client_secret."
+  }
+}
