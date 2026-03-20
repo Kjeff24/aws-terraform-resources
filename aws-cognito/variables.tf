@@ -206,3 +206,28 @@ variable "idp_login_with_amazon" {
     error_message = "When idp_login_with_amazon.enabled is true, client_id and client_secret must be provided."
   }
 }
+
+# Sign in with Apple
+variable "idp_apple" {
+  description = "Sign in with Apple IdP configuration"
+  type = object({
+    enabled          = bool
+    client_id        = string   # Services ID
+    team_id          = string
+    key_id           = string
+    private_key      = string
+    authorize_scopes = optional(string, "name email")
+  })
+  default = {
+    enabled          = false
+    client_id        = ""
+    team_id          = ""
+    key_id           = ""
+    private_key      = ""
+    authorize_scopes = "name email"
+  }
+  validation {
+    condition     = (var.idp_apple.enabled == false) || (length(var.idp_apple.client_id) > 0 && length(var.idp_apple.team_id) > 0 && length(var.idp_apple.key_id) > 0 && length(var.idp_apple.private_key) > 0)
+    error_message = "When idp_apple.enabled is true, client_id, team_id, key_id, and private_key must be provided."
+  }
+}
