@@ -36,6 +36,9 @@ variable "tags" {
   }
 }
 
+############################
+# 🔐 Cognito Configuration
+############################
 variable "user_pool_settings" {
   description = "Configuration for Cognito user pool, including verification, username attributes, password policy, and schema"
   type = object({
@@ -138,5 +141,26 @@ variable "cognito_client_config" {
       var.cognito_client_config.token_validity.id_token > 0
     ])
     error_message = "cognito_client_config invalid: PKCE clients must not generate secrets; allowed_flows must include 'code'; callback/logout URLs must start with http(s); token units must be minutes/hours/days; token durations must be > 0."
+  }
+}
+
+# Google
+variable "idp_google" {
+  description = "Google IdP configuration"
+  type = object({
+    enabled          = bool
+    client_id        = string
+    client_secret    = string
+    authorize_scopes = optional(string, "openid email profile")
+  })
+  default = {
+    enabled          = false
+    client_id        = ""
+    client_secret    = ""
+    authorize_scopes = "openid email profile"
+  }
+  validation {
+    condition     = (var.idp_google.enabled == false) || (length(var.idp_google.client_id) > 0 && length(var.idp_google.client_secret) > 0)
+    error_message = "When idp_google.enabled is true, client_id and client_secret must be provided."
   }
 }
