@@ -286,3 +286,13 @@ variable "idp_saml_providers" {
     error_message = "Each SAML provider must include either metadata_url or metadata_file."
   }
 }
+
+variable "managed_login_version" {
+  description = "Cognito managed login version"
+  type        = string
+  default     = "1"
+  validation {
+    condition     = contains(["1", "2"], var.managed_login_version)
+    error_message = "managed_login_version must be \"1\" or \"2\" to match supported Cognito managed login experience versions."
+  }
+}
