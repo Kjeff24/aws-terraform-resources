@@ -185,3 +185,24 @@ variable "idp_facebook" {
     error_message = "When idp_facebook.enabled is true, client_id and client_secret must be provided."
   }
 }
+
+# Login with Amazon
+variable "idp_login_with_amazon" {
+  description = "Login with Amazon IdP configuration"
+  type = object({
+    enabled          = bool
+    client_id        = string
+    client_secret    = string
+    authorize_scopes = optional(string, "profile")
+  })
+  default = {
+    enabled          = false
+    client_id        = ""
+    client_secret    = ""
+    authorize_scopes = "profile"
+  }
+  validation {
+    condition     = (var.idp_login_with_amazon.enabled == false) || (length(var.idp_login_with_amazon.client_id) > 0 && length(var.idp_login_with_amazon.client_secret) > 0)
+    error_message = "When idp_login_with_amazon.enabled is true, client_id and client_secret must be provided."
+  }
+}
