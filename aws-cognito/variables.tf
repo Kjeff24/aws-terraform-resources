@@ -164,3 +164,24 @@ variable "idp_google" {
     error_message = "When idp_google.enabled is true, client_id and client_secret must be provided."
   }
 }
+
+# Facebook
+variable "idp_facebook" {
+  description = "Facebook IdP configuration"
+  type = object({
+    enabled          = bool
+    client_id        = string
+    client_secret    = string
+    authorize_scopes = optional(string, "email public_profile")
+  })
+  default = {
+    enabled          = false
+    client_id        = ""
+    client_secret    = ""
+    authorize_scopes = "email public_profile"
+  }
+  validation {
+    condition     = (var.idp_facebook.enabled == false) || (length(var.idp_facebook.client_id) > 0 && length(var.idp_facebook.client_secret) > 0)
+    error_message = "When idp_facebook.enabled is true, client_id and client_secret must be provided."
+  }
+}
