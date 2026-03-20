@@ -260,3 +260,29 @@ variable "idp_oidc_providers" {
     error_message = "Each OIDC provider must include non-empty issuer, client_id, and client_secret."
   }
 }
+
+# SAML providers (zero or more)
+variable "idp_saml_providers" {
+  description = "List of SAML IdPs to create"
+  type = list(object({
+    name                        = string
+    metadata_url                = optional(string)
+    metadata_file               = optional(string)
+    idp_init                    = optional(string)   # "true" or "false"
+    encrypted_responses         = optional(string)   # "true" or "false"
+    idp_signout                 = optional(string)   # "true" or "false"
+    request_signing_algorithm   = optional(string, "rsa-sha256")
+    attribute_mapping           = optional(map(string))
+  }))
+  default = []
+  validation {
+    condition     = length(distinct([for p in var.idp_saml_providers : p.name])) == length(var.idp_saml_providers)
+    error_message = "Each SAML provider must have a unique 'name'."
+  }
+  validation {
+    condition = alltrue([
+      for p in var.idp_saml_providers : (try(length(p.metadata_url) > 0, false) || try(length(p.metadata_file) > 0, false))
+    ])
+    error_message = "Each SAML provider must include either metadata_url or metadata_file."
+  }
+}
