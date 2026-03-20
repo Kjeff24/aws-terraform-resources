@@ -79,3 +79,64 @@ variable "user_pool_settings" {
     error_message = "user_pool_settings invalid: password minimum length must be >= 8 and username_attributes must include at least one attribute."
   }
 }
+
+variable "cognito_client_config" {
+  description = "Full configuration for Cognito user pool client. Generate secret should be false for public clients using PKCE."
+  type = object({
+    generate_secret = bool
+    oauth_settings = object({
+      allowed_flows                = list(string)
+      allowed_scopes               = list(string)
+      allowed_flows_user_pool      = bool
+      supported_identity_providers = list(string)
+      explicit_auth_flows          = list(string)
+      callback_urls                = list(string)
+      logout_urls                  = list(string)
+    })
+    token_validity = object({
+      refresh_token = number
+      access_token  = number
+      id_token      = number
+      refresh_unit  = string
+      access_unit   = string
+      id_unit       = string
+    })
+  })
+  default = {
+    generate_secret = false
+    oauth_settings = {
+      allowed_flows                = ["code"]
+      allowed_scopes               = ["email", "openid", "aws.cognito.signin.user.admin", "profile"]
+      allowed_flows_user_pool      = true
+      supported_identity_providers = ["COGNITO"]
+      explicit_auth_flows          = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+      callback_urls                = ["https://google.com/", "https://example.com/oauth2/code"]
+      logout_urls                  = ["http://localhost:4200/logout", "https://example.com/logout"]
+    }
+    token_validity = {
+      refresh_token = 30
+      access_token  = 6
+      id_token      = 6
+      refresh_unit  = "days"
+      access_unit   = "hours"
+      id_unit       = "hours"
+    }
+  }
+
+  validation {
+    condition = alltrue([
+      var.cognito_client_config.generate_secret == false,
+      contains(var.cognito_client_config.oauth_settings.allowed_flows, "code"),
+      var.cognito_client_config.oauth_settings.allowed_flows_user_pool == true,
+      alltrue([for u in var.cognito_client_config.oauth_settings.callback_urls : can(regex("^https?://", u))]),
+      alltrue([for u in var.cognito_client_config.oauth_settings.logout_urls : can(regex("^https?://", u))]),
+      contains(["minutes", "hours", "days"], var.cognito_client_config.token_validity.refresh_unit),
+      contains(["minutes", "hours", "days"], var.cognito_client_config.token_validity.access_unit),
+      contains(["minutes", "hours", "days"], var.cognito_client_config.token_validity.id_unit),
+      var.cognito_client_config.token_validity.refresh_token > 0,
+      var.cognito_client_config.token_validity.access_token > 0,
+      var.cognito_client_config.token_validity.id_token > 0
+    ])
+    error_message = "cognito_client_config invalid: PKCE clients must not generate secrets; allowed_flows must include 'code'; callback/logout URLs must start with http(s); token units must be minutes/hours/days; token durations must be > 0."
+  }
+}
