@@ -17,3 +17,8 @@ output "user_pool_domain" {
   description = "The Cognito hosted UI domain"
   value       = aws_cognito_user_pool_domain.user_pool_domain.domain
 }
+
+output "user_pool_endpoint" {
+  description = "The endpoint of the Cognito User Pool"
+  value       = aws_cognito_user_pool.user_pool.endpoint
+}
