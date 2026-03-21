@@ -219,3 +219,10 @@ resource "aws_cognito_identity_provider" "saml" {
     username = "sub"
   })
 }
+
+# 🌐 AWS Cognito Domain
+resource "aws_cognito_user_pool_domain" "user_pool_domain" {
+  domain                = "${var.project_name}-${data.aws_caller_identity.current.account_id}-domain"
+  user_pool_id          = aws_cognito_user_pool.user_pool.id
+  managed_login_version = var.managed_login_version
+}
