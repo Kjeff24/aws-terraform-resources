@@ -1,3 +1,48 @@
+/*
+Module: AWS Cognito Authentication
+
+Description:
+- Provisions a Cognito User Pool, User Pool Client, Hosted UI domain, and optional
+  federated identity providers (Google, Facebook, Login with Amazon, Apple, OIDC, SAML).
+- Builds a dynamic list of supported identity providers based on which IdPs are configured.
+
+Creates:
+- data.aws_caller_identity.current
+- aws_cognito_user_pool.user_pool
+- aws_cognito_user_pool_client.user_pool_client
+- aws_cognito_identity_provider.google | facebook | login_with_amazon | apple (conditional)
+- aws_cognito_identity_provider.oidc (for_each)
+- aws_cognito_identity_provider.saml (for_each)
+- aws_cognito_user_pool_domain.user_pool_domain
+
+Inputs:
+- var.project_name (string)
+- var.tags (map(string))
+- var.user_pool_settings (object):
+  - auto_verified_attributes (list(string))
+  - username_attributes (list(string))
+  - password_policy { min_length, require_uppercase, require_lowercase, require_numbers, require_symbols, temp_validity_days }
+  - user_pool_schema (list(object))
+- var.cognito_client_config (object):
+  - generate_secret (bool)
+  - oauth_settings { allowed_flows_user_pool, allowed_flows, allowed_scopes, explicit_auth_flows, callback_urls, logout_urls, supported_identity_providers }
+  - token_validity { refresh_token, access_token, id_token, refresh_unit, access_unit, id_unit }
+- var.managed_login_version (string)
+- var.idp_google, var.idp_facebook, var.idp_login_with_amazon, var.idp_apple (object):
+  - enabled (bool), client_id, client_secret, authorize_scopes
+  - Apple: team_id, key_id, private_key
+- var.idp_oidc_providers (list(object)):
+  - name, issuer, client_id, client_secret
+  - optional: authorize_url, token_url, attributes_url, jwks_uri, attributes_request_method, authorize_scopes, attribute_mapping
+- var.idp_saml_providers (list(object)):
+  - name, idp_init, metadata_url, encrypted_responses, idp_signout, request_signing_algorithm, attribute_mapping
+
+Notes:
+- Set generate_secret=false for public browser-based clients.
+- Identity providers are created only when configured (counts/for_each) and the client
+  supported_identity_providers is derived from those actually present.
+*/
+
 data "aws_caller_identity" "current" {}
 
 # Computed list of federated IdP names that actually exist in this plan
