@@ -69,31 +69,6 @@ variable "db_password" {
   description = "Aurora database password"
 }
 
-variable "aurora_cluster_endpoint" {
-  type        = string
-  description = "Endpoint of the Aurora cluster"
-}
-
-variable "aurora_cluster_port" {
-  description = "The Aurora cluster port"
-  type        = string
-}
-
-variable "aurora_cluster_database_name" {
-  description = "The database name"
-  type        = string
-}
-
-variable "aurora_cluster_master_username" {
-  description = "The master username for the database"
-  type        = string
-}
-
-variable "aurora_credentials_secret_arn" {
-  type        = string
-  description = "ARN of the Secrets Manager secret for Aurora credentials"
-}
-
 variable "health_check_path" {
   description = "Health check path"
   type        = string
