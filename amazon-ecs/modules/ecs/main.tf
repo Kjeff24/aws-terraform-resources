@@ -1,3 +1,46 @@
+/*
+Module: ECS Cluster, Task Definition, and Service
+
+Description:
+- Provisions an ECS cluster with CloudWatch container insights, a Fargate task
+  definition for the web app container, a log group, and an ECS service wired to
+  an ALB target group. Environment variables include Aurora connection details
+  with optional Secrets Manager integration for DB password.
+
+Creates:
+- aws_ecs_cluster.app_cluster
+- aws_cloudwatch_log_group.ecs_logs
+- aws_ecs_task_definition.client_container_definition
+- aws_ecs_service.client_service_management
+
+Inputs:
+- var.tags (map(string))
+- var.region (string)
+- var.private_subnet_ids (list(string))
+- var.security_group_id (string)
+- var.target_group_arn (string)
+- var.execution_role_arn (string)
+- var.task_role_arn (string)
+- var.health_check_path (string)
+- var.db_password (string | null)
+- var.ecs_config (object):
+  - cluster_name (string)
+  - service_name (string)
+  - container_name (string)
+  - container_image (string)
+  - container_port (number)
+  - network_mode (string)            e.g., "awsvpc"
+  - task_cpu (number|string)         Fargate CPU units
+  - task_memory (number|string)      Fargate memory
+  - desired_count (number)
+  - environment_variables (map(string))
+
+Notes:
+- Service desired_count is ignored in lifecycle to allow external autoscaling policies.
+- Fargate launch type with awsvpc networking (no public IP) on private subnets.
+- Container health check pings http://localhost:${var.ecs_config.container_port}${var.health_check_path}.
+*/
+
 locals {
   ecs_base_env = {
     APP_PORT = tostring(var.ecs_config.container_port)
