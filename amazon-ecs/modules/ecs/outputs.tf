@@ -45,3 +45,14 @@ output "task_definition_revision" {
   description = "Task definition revision"
   value       = aws_ecs_task_definition.client_container_definition.revision
 }
+
+# CloudWatch Outputs
+output "log_group_name" {
+  description = "CloudWatch log group name"
+  value       = aws_cloudwatch_log_group.ecs_logs.name
+}
+
+output "log_group_arn" {
+  description = "CloudWatch log group ARN"
+  value       = aws_cloudwatch_log_group.ecs_logs.arn
+}
