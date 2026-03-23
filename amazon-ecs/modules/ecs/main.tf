@@ -18,6 +18,18 @@ locals {
 
 }
 
+# CloudWatch Log Group for ECS Logs
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/${var.ecs_config.service_name}"
+  retention_in_days = 7
+
+  tags = {
+    Name         = "${var.ecs_config.service_name}-logs"
+    ResourceName = "ECS-LogGroup"
+    Type         = "Container-Logging"
+  }
+}
+
 # ECS Cluster for Container Orchestration
 resource "aws_ecs_cluster" "app_cluster" {
   name = var.ecs_config.cluster_name
@@ -89,14 +101,39 @@ resource "aws_ecs_task_definition" "client_container_definition" {
   }
 }
 
-# CloudWatch Log Group for ECS Logs
-resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/${var.ecs_config.service_name}"
-  retention_in_days = 7
+# ECS Service - Manages running containers
+resource "aws_ecs_service" "client_service_management" {
+  name            = var.ecs_config.service_name
+  cluster         = aws_ecs_cluster.app_cluster.id
+  task_definition = aws_ecs_task_definition.client_container_definition.arn
+  desired_count   = var.ecs_config.desired_count
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.security_group_id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = var.ecs_config.container_name
+    container_port   = var.ecs_config.container_port
+  }
+
+  # Ensure ALB target group is created before service
+  depends_on = [var.target_group_arn]
+
+  # Enable service discovery if needed
+  enable_execute_command = true
 
   tags = {
-    Name         = "${var.ecs_config.service_name}-logs"
-    ResourceName = "ECS-LogGroup"
-    Type         = "Container-Logging"
+    Name         = "${var.ecs_config.service_name}-service"
+    ResourceName = "ECS-Service"
+    Type         = "Container-Service"
+  }
+
+  lifecycle {
+    ignore_changes = [desired_count]
   }
 }
