@@ -1,4 +1,33 @@
 
+/*
+Module: IAM Roles and Policies for ECS
+
+Description:
+- Provisions the IAM roles and policies required by ECS tasks:
+  - Execution Role: pulls images, reads secrets, ships logs.
+  - Task Role: in-container app permissions (logs, metrics, SSM exec, secrets).
+
+Creates:
+- data.aws_caller_identity.current
+- aws_iam_role.ecs_task_execution_role
+- aws_iam_role_policy_attachment.ecs_task_execution_managed
+- aws_iam_role_policy.ecs_execution_secrets_policy
+- aws_iam_role.ecs_task_role
+- aws_iam_role_policy.ecs_task_basic_policy
+
+Inputs:
+- var.project_name (string)
+- var.region (string)
+- var.tags (map(string))
+
+Notes:
+- Both roles trust ecs-tasks.amazonaws.com via assume role policy.
+  is derived from data.aws_caller_identity.current.
+- The basic task policy includes CloudWatch Logs, custom metrics, SSM exec channels,
+  and encrypted secret read access; tighten to least-privilege as needed.
+*/
+
+data "aws_caller_identity" "current" {}
 
 # ===============================
 # ECS Task Execution Role
