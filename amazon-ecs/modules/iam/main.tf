@@ -40,3 +40,39 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 
 }
+
+# Minimal permissions for application containers
+resource "aws_iam_role_policy" "ecs_task_basic_policy" {
+  name = "${var.project_name}-ecs-task-role-policy"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "cloudwatch:PutMetricData"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = ["secretsmanager:GetSecretValue"],
+        Resource = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:*"
+      }
+    ]
+  })
+}
