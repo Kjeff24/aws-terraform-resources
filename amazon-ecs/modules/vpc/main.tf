@@ -113,3 +113,65 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
+
+# 🔒 ALB Security Group
+resource "aws_security_group" "alb" {
+  name        = "${var.project_name}-alb-sg"
+  description = "Allow HTTP/HTTPS inbound traffic to the ALB"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name         = "${var.project_name}-alb-sg"
+    ResourceName = "ALBSecurityGroup"
+  }
+}
+
+# 🔒 ECS Security Group
+resource "aws_security_group" "ecs" {
+  name        = "${var.project_name}-ecs-sg"
+  description = "Allow inbound traffic from ALB to ECS tasks"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Allow traffic from ALB"
+    from_port       = var.container_port
+    to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name         = "${var.project_name}-ecs-sg"
+    ResourceName = "ECSSecurityGroup"
+  }
+}
