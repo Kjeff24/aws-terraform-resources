@@ -20,3 +20,10 @@ module "alb" {
   container_port        = var.ecs_config.container_port
   health_check_path     = var.health_check_path
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  region       = var.region
+  project_name = var.project_name
+}
