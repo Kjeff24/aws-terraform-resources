@@ -1,3 +1,17 @@
+/*
+Root: Amazon ECS
+
+Description:
+- Wires together the vpc, alb, iam, and ecs modules to provision a complete
+  Fargate-based ECS workload with networking, load balancing, and IAM roles.
+
+Module call order:
+  vpc  →  alb  (depends on vpc outputs)
+  vpc  →  ecs  (depends on vpc outputs)
+  alb  →  ecs  (depends on alb target group ARN)
+  iam  →  ecs  (depends on IAM role ARNs)
+*/
+
 module "vpc" {
   source = "./modules/vpc"
 
