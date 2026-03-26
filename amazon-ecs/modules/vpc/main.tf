@@ -1,3 +1,38 @@
+/*
+Module: VPC Networking
+
+Description:
+- Provisions the core networking infrastructure for the ECS workload, including
+  a VPC, public and private subnets across multiple AZs, an Internet Gateway,
+  a NAT Gateway for private subnet egress, route tables, and security groups
+  for the ALB and ECS tasks.
+
+Creates:
+- aws_vpc.main
+- aws_internet_gateway.main
+- aws_subnet.public (count)
+- aws_subnet.private (count)
+- aws_eip.nat
+- aws_nat_gateway.main
+- aws_route_table.public + aws_route_table_association.public
+- aws_route_table.private + aws_route_table_association.private
+- aws_security_group.alb
+- aws_security_group.ecs
+
+Inputs:
+- var.region (string)
+- var.project_name (string)
+- var.vpc_cidr (string)
+- var.availability_zones (list(string))
+- var.public_subnet_cidrs (list(string))
+- var.private_subnet_cidrs (list(string))
+- var.container_port (number)
+
+Notes:
+- NAT Gateway is deployed in the first public subnet only.
+- ECS security group allows inbound traffic only from the ALB security group.
+*/
+
 # 🌐 VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
