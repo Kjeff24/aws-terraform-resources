@@ -1,3 +1,28 @@
+/*
+Module: Application Load Balancer
+
+Description:
+- Provisions an internet-facing Application Load Balancer, an HTTP listener,
+  and an IP-based target group used by the ECS Fargate service.
+
+Creates:
+- aws_lb.main
+- aws_lb_target_group.main
+- aws_lb_listener.http
+
+Inputs:
+- var.project_name (string)
+- var.vpc_id (string)
+- var.public_subnet_ids (list(string))
+- var.alb_security_group_id (string)
+- var.container_port (number)
+- var.health_check_path (string)
+
+Notes:
+- Target type is "ip" to support Fargate awsvpc networking.
+- Listener forwards all HTTP traffic on port 80 to the target group.
+*/
+
 # ⚖️ Application Load Balancer
 resource "aws_lb" "main" {
   name               = "${var.project_name}-alb"
