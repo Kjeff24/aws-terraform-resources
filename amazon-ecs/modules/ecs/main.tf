@@ -49,7 +49,6 @@ locals {
   ecs_env_map = merge(
     local.ecs_base_env,
     var.ecs_config.environment_variables,
-    var.db_password != null && var.db_password != "" ? { DB_PASS = var.db_password } : {}
   )
 
   ecs_env_list = [

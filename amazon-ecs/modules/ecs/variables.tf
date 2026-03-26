@@ -64,11 +64,6 @@ variable "ecs_config" {
   })
 }
 
-variable "db_password" {
-  type        = string
-  description = "Aurora database password"
-}
-
 variable "health_check_path" {
   description = "Health check path"
   type        = string

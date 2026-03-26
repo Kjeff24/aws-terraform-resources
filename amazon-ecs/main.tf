@@ -53,6 +53,5 @@ module "ecs" {
   execution_role_arn = module.iam.task_execution_role_arn
   task_role_arn      = module.iam.task_role_arn
   health_check_path  = var.health_check_path
-  db_password        = var.db_password
   ecs_config         = var.ecs_config
 }

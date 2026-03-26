@@ -89,10 +89,3 @@ variable "health_check_path" {
   type        = string
   default     = "/health"
 }
-
-variable "db_password" {
-  description = "Database password passed to the ECS container as an environment variable"
-  type        = string
-  sensitive   = true
-  default     = null
-}
