@@ -14,7 +14,7 @@ variable "region" {
 variable "project_name" {
   description = "Project name used for resource naming and tagging"
   type        = string
-  default     = "my-cognito-project"
+  default     = "my-ecs-app"
 
   validation {
     condition = (
@@ -82,6 +82,20 @@ variable "ecs_config" {
     max_capacity          = number
     environment_variables = map(string)
   })
+  default = {
+    cluster_name    = "my-ecs-app-cluster"
+    service_name    = "my-ecs-app-service"
+    network_mode    = "awsvpc"
+    container_image = "nginx:latest"
+    container_name  = "my-ecs-app"
+    container_port  = 8080
+    task_cpu        = 256
+    task_memory     = 512
+    desired_count   = 1
+    min_capacity    = 1
+    max_capacity    = 4
+    environment_variables = {}
+  }
 }
 
 variable "health_check_path" {
