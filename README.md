@@ -95,12 +95,33 @@ Set up AWS Athena for interactive SQL queries on data stored in S3 with Glue Dat
 - Multiple workgroup configurations
 - Example queries and sample data
 
+#### 9. [amazon-cognito](./amazon-cognito/)
+Provision a fully-featured Cognito User Pool with hosted UI, OAuth2/PKCE client, and federated identity providers.
+
+**Features:**
+- Cognito User Pool with configurable password policy and schema
+- PKCE-ready app client with OAuth2 flows and token validity settings
+- Federated IdPs: Google, Facebook, Login with Amazon, Sign in with Apple
+- Generic OIDC and SAML provider support (multiple via for_each)
+- Hosted UI domain with managed login version support
+- Dynamic supported_identity_providers list derived from configured IdPs
+
+#### 10. [amazon-ecs](./amazon-ecs/)
+Deploy a complete Fargate-based ECS workload with VPC, ALB, IAM roles, and ECS cluster.
+
+**Features:**
+- Modular design: vpc, alb, iam, ecs modules
+- ECS Fargate cluster with CloudWatch Container Insights
+- Application Load Balancer with HTTP listener and health checks
+- Private subnets for ECS tasks with NAT Gateway egress
+- IAM execution and task roles with least-privilege policies
+- SSM Execute Command support for container debugging
+
 ## 🚧 Planned Projects
 
 ### Intermediate-Level
 
 - **serverless-api** — Deploy a fully managed REST API using API Gateway, AWS Lambda, and DynamoDB
-- **ecs-fargate-cluster** — Provision an ECS cluster running containerized applications on Fargate
 - **cloudwatch-alerts** — Set up CloudWatch alarms to monitor EC2, RDS, or Lambda metrics
 - **ebs-snapshot-automation** — Automate EBS snapshot creation and cleanup using EventBridge and Lambda
 
@@ -176,7 +197,9 @@ aws-terraform-projects/
 ├── rds-mysql/                  # ✅ RDS MySQL deployment
 ├── 3tier-architecture/        # ✅ 3-tier web app architecture
 ├── aws-glue-etl-pipeline/     # ✅ Glue ETL pipeline
-└── aws-athena/                # ✅ Athena analytics
+├── aws-athena/                # ✅ Athena analytics
+├── amazon-cognito/            # ✅ Cognito authentication
+└── amazon-ecs/                # ✅ ECS Fargate workload
 ```
 
 Each project follows a modular structure:
