@@ -27,7 +27,6 @@ variable "lambda_config" {
   type = object({
     runtime       = string
     handler       = string
-    filename      = string
     timeout       = number
     memory_size   = number
     architectures = list(string)
