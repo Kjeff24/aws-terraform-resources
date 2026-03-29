@@ -16,3 +16,12 @@ module "iam" {
   region       = var.region
   project_name = var.project_name
 }
+
+module "lambda" {
+  source = "./modules/lambda"
+
+  region             = var.region
+  project_name       = var.project_name
+  execution_role_arn = module.iam.lambda_execution_role_arn
+  lambda_config      = var.lambda_config
+}
