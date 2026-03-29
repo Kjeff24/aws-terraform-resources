@@ -25,3 +25,12 @@ module "lambda" {
   execution_role_arn = module.iam.lambda_execution_role_arn
   lambda_config      = var.lambda_config
 }
+
+module "api_gateway" {
+  source = "./modules/api_gateway"
+
+  project_name         = var.project_name
+  lambda_function_name = module.lambda.function_name
+  lambda_invoke_arn    = module.lambda.invoke_arn
+  api_gateway_config   = var.api_gateway_config
+}
