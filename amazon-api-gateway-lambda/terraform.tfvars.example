@@ -1,0 +1,35 @@
+############################
+# General Configuration
+############################
+region       = "eu-west-1"
+project_name = "my-api"
+
+tags = {
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+  Project     = "API Gateway Lambda"
+}
+
+############################
+# Lambda Configuration
+############################
+lambda_config = {
+  runtime       = "python3.12"
+  handler       = "index.handler"
+  timeout       = 30
+  memory_size   = 128
+  architectures = ["arm64"]
+  environment_variables = {
+    LOG_LEVEL = "INFO"
+  }
+}
+
+############################
+# API Gateway Configuration
+############################
+api_gateway_config = {
+  stage_name       = "$default"
+  auto_deploy      = true
+  throttling_burst = 100
+  throttling_rate  = 50
+}
