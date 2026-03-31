@@ -104,3 +104,22 @@ resource "aws_rds_cluster" "main" {
     ResourceName = "AuroraCluster"
   }
 }
+
+# 🖥️ Aurora Cluster Instances
+resource "aws_rds_cluster_instance" "main" {
+  count                   = var.aurora_config.instance_count
+  identifier              = "${var.project_name}-instance-${count.index + 1}"
+  cluster_identifier      = aws_rds_cluster.main.id
+  instance_class          = local.instance_class
+  engine                  = aws_rds_cluster.main.engine
+  engine_version          = aws_rds_cluster.main.engine_version
+  db_subnet_group_name    = aws_db_subnet_group.main.name
+  db_parameter_group_name = aws_db_parameter_group.main.name
+  publicly_accessible     = false
+
+  tags = {
+    Name         = "${var.project_name}-instance-${count.index + 1}"
+    ResourceName = "AuroraInstance"
+    Role         = count.index == 0 ? "Writer" : "Reader"
+  }
+}
