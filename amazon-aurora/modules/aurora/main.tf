@@ -62,3 +62,14 @@ resource "aws_rds_cluster_parameter_group" "main" {
     ResourceName = "ClusterParameterGroup"
   }
 }
+
+# ⚙️ Instance Parameter Group
+resource "aws_db_parameter_group" "main" {
+  name   = "${var.project_name}-instance-pg"
+  family = local.param_family
+
+  tags = {
+    Name         = "${var.project_name}-instance-pg"
+    ResourceName = "InstanceParameterGroup"
+  }
+}
