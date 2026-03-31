@@ -73,3 +73,34 @@ resource "aws_db_parameter_group" "main" {
     ResourceName = "InstanceParameterGroup"
   }
 }
+
+# 🗄️ Aurora Cluster
+resource "aws_rds_cluster" "main" {
+  cluster_identifier          = "${var.project_name}-cluster"
+  engine                      = var.aurora_config.engine
+  engine_version              = var.aurora_config.engine_version
+  engine_mode                 = "provisioned"
+  database_name               = var.aurora_config.database_name
+  master_username             = var.aurora_config.master_username
+  manage_master_user_password = true
+  port                        = local.port
+  db_subnet_group_name        = aws_db_subnet_group.main.name
+  vpc_security_group_ids      = [var.security_group_id]
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.main.name
+  skip_final_snapshot         = false
+  final_snapshot_identifier   = "${var.project_name}-final-snapshot"
+  storage_encrypted           = true
+
+  dynamic "serverless_v2_scaling_configuration" {
+    for_each = local.is_serverless ? [var.aurora_config.serverless_v2_scaling] : []
+    content {
+      min_capacity = serverless_v2_scaling_configuration.value.min_capacity
+      max_capacity = serverless_v2_scaling_configuration.value.max_capacity
+    }
+  }
+
+  tags = {
+    Name         = "${var.project_name}-cluster"
+    ResourceName = "AuroraCluster"
+  }
+}
