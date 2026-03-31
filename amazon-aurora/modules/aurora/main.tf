@@ -40,3 +40,14 @@ locals {
   is_serverless = var.aurora_config.serverless_v2_scaling != null
   instance_class = local.is_serverless ? "db.serverless" : var.aurora_config.instance_class
 }
+
+# 🗄️ DB Subnet Group
+resource "aws_db_subnet_group" "main" {
+  name       = "${var.project_name}-subnet-group"
+  subnet_ids = var.private_subnet_ids
+
+  tags = {
+    Name         = "${var.project_name}-subnet-group"
+    ResourceName = "DBSubnetGroup"
+  }
+}
