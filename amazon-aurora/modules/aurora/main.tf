@@ -51,3 +51,14 @@ resource "aws_db_subnet_group" "main" {
     ResourceName = "DBSubnetGroup"
   }
 }
+
+# ⚙️ Cluster Parameter Group
+resource "aws_rds_cluster_parameter_group" "main" {
+  name   = "${var.project_name}-cluster-pg"
+  family = local.param_family
+
+  tags = {
+    Name         = "${var.project_name}-cluster-pg"
+    ResourceName = "ClusterParameterGroup"
+  }
+}
