@@ -18,3 +18,12 @@ module "vpc" {
   private_subnet_cidrs = var.private_subnet_cidrs
   aurora_port          = var.aurora_config.engine == "aurora-mysql" ? 3306 : 5432
 }
+
+module "aurora" {
+  source = "./modules/aurora"
+
+  project_name       = var.project_name
+  private_subnet_ids = module.vpc.private_subnet_ids
+  security_group_id  = module.vpc.aurora_security_group_id
+  aurora_config      = var.aurora_config
+}
