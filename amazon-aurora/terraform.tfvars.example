@@ -1,0 +1,48 @@
+############################
+# General Configuration
+############################
+region       = "eu-west-1"
+project_name = "my-aurora"
+
+tags = {
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+  Project     = "Amazon Aurora"
+}
+
+############################
+# VPC Configuration
+############################
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+
+############################
+# Aurora Configuration — Provisioned (PostgreSQL)
+############################
+aurora_config = {
+  engine          = "aurora-postgresql"
+  engine_version  = "15.4"
+  instance_class  = "db.r6g.large"
+  instance_count  = 2
+  database_name   = "appdb"
+  master_username = "postgres"
+  serverless_v2_scaling = null
+}
+
+############################
+# Aurora Configuration — Serverless v2 (MySQL)
+############################
+# aurora_config = {
+#   engine          = "aurora-mysql"
+#   engine_version  = "8.0.mysql_aurora.3.04.0"
+#   instance_class  = "db.r6g.large"  # overridden to db.serverless automatically
+#   instance_count  = 2
+#   database_name   = "appdb"
+#   master_username = "admin"
+#   serverless_v2_scaling = {
+#     min_capacity = 0.5
+#     max_capacity = 8
+#   }
+# }
