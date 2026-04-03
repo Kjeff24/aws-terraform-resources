@@ -1,0 +1,46 @@
+############################
+# General Configuration
+############################
+region       = "eu-west-1"
+project_name = "my-ecs-app"
+
+tags = {
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+  Project     = "Amazon ECS"
+}
+
+############################
+# VPC Configuration
+############################
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["eu-west-1a", "eu-west-1b"]
+
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+
+############################
+# ECS Configuration
+############################
+health_check_path = "/health"
+
+ecs_config = {
+  cluster_name    = "my-ecs-app-cluster"
+  service_name    = "my-ecs-app-service"
+  network_mode    = "awsvpc"
+  container_image = "123456789012.dkr.ecr.eu-west-1.amazonaws.com/my-ecs-app:latest"
+  container_name  = "my-ecs-app"
+  container_port  = 8080
+
+  task_cpu    = 256
+  task_memory = 512
+
+  desired_count = 1
+  min_capacity  = 1
+  max_capacity  = 4
+
+  environment_variables = {
+    APP_ENV = "development"
+    LOG_LEVEL = "info"
+  }
+}
