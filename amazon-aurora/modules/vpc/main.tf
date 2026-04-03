@@ -1,0 +1,76 @@
+/*
+Module: VPC Networking for Aurora
+
+Description:
+- Provisions isolated networking for the Aurora cluster, including a VPC,
+  private subnets across multiple AZs, and a security group that restricts
+  database access to within the VPC only.
+
+Creates:
+- aws_vpc.main
+- aws_subnet.private (count)
+- aws_security_group.aurora
+
+Inputs:
+- var.project_name (string)
+- var.vpc_cidr (string)
+- var.availability_zones (list(string))
+- var.private_subnet_cidrs (list(string))
+- var.aurora_port (number)
+
+Notes:
+- No IGW or NAT Gateway — Aurora runs in fully private subnets.
+- Security group allows inbound on the Aurora port from within the VPC CIDR only.
+*/
+
+# 🌐 VPC
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name         = "${var.project_name}-vpc"
+    ResourceName = "VPC"
+  }
+}
+
+# 🔒 Private Subnets
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = var.availability_zones[count.index]
+
+  tags = {
+    Name         = "${var.project_name}-private-subnet-${count.index + 1}"
+    ResourceName = "PrivateSubnet"
+  }
+}
+
+# 🔒 Aurora Security Group
+resource "aws_security_group" "aurora" {
+  name        = "${var.project_name}-aurora-sg"
+  description = "Allow inbound Aurora traffic from within the VPC"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "Aurora access from within VPC"
+    from_port   = var.aurora_port
+    to_port     = var.aurora_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name         = "${var.project_name}-aurora-sg"
+    ResourceName = "AuroraSecurityGroup"
+  }
+}
